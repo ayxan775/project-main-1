@@ -46,7 +46,7 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
           >
             <div className="relative w-10 h-10 overflow-hidden rounded-xl">
               <img 
-                src="/src/img/logo.png" 
+                src="/images/logo.png" 
                 alt="AzPort Supply Logo" 
                 className="h-full w-full object-contain"
               />

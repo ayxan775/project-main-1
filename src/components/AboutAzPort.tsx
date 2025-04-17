@@ -143,7 +143,7 @@ export function AboutAzPort() {
             >
               <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-transparent opacity-30 z-0"></div>
               <img 
-                src="/src/img/AzPort Supply.webp" 
+                src="/images/AzPort Supply.webp" 
                 alt="AzPort Supply Facility" 
                 className="rounded-lg w-full h-auto object-cover relative z-10"
               />

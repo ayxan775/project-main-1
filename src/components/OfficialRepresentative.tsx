@@ -73,7 +73,7 @@ export function OfficialRepresentative() {
             <div className="bg-white dark:bg-gray-800 p-8 md:p-10 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 backdrop-blur-sm bg-opacity-70 dark:bg-opacity-70 relative z-10 transform hover:-rotate-1 transition-all duration-500 hover:shadow-blue-500/10">
               <div className="flex justify-center mb-8">
                 <img
-                  src="/src/img/logo_balflex.png"
+                  src="/images/logo_balflex.png"
                   alt="Balflex Logo"
                   className="h-24 filter drop-shadow-xl"
                 />

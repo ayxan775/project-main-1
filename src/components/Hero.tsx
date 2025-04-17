@@ -9,7 +9,7 @@ export function Hero() {
       <div 
         className="absolute inset-0 bg-cover bg-center bg-fixed"
         style={{ 
-          backgroundImage: 'url("/src/img/1.webp")',
+          backgroundImage: 'url("/images/1.webp")',
           backgroundPosition: '50% 30%' // Adjust focus point of the background
         }}
       />
