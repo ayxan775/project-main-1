@@ -45,9 +45,9 @@ const testimonials = [
 
 export function Products() {
   return (
-    <div className="bg-white dark:bg-gray-900 min-h-screen">
+    <div className="bg-white dark:bg-gray-900 min-h-screen pt-20">
       {/* Hero Section */}
-      <section className="relative py-20 bg-blue-50 dark:bg-blue-900/20 overflow-hidden">
+      <section className="relative py-24 bg-blue-50 dark:bg-blue-900/20 overflow-hidden">
         <div className="absolute inset-0 opacity-20 dark:opacity-10">
           <svg className="absolute left-0 top-0 h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="#2563eb">
             <path d="M0 .5H31.5V32" />

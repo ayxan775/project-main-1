@@ -46,24 +46,26 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 overflow-hidden">
-              <Image 
-                src="/images/logo.png" 
-                alt="AzPort Supply - Industrial Supply Chain Solutions"
-                fill
-                className="object-contain"
-                sizes="(max-width: 640px) 48px, (max-width: 1024px) 56px, 64px"
-                priority
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white font-sans">
-                AzPort Supply
-              </span>
-              <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium hidden sm:block">
-                Industrial Solutions
-              </span>
-            </div>
+            <Link href="/" className="flex items-center space-x-4">
+              <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 overflow-hidden">
+                <Image 
+                  src="/images/logo.png" 
+                  alt="AzPort Supply - Industrial Supply Chain Solutions"
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 640px) 48px, (max-width: 1024px) 56px, 64px"
+                  priority
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white font-sans">
+                  AzPort Supply
+                </span>
+                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium hidden sm:block">
+                  Industrial Solutions
+                </span>
+              </div>
+            </Link>
           </motion.div>
           
           <div className="flex items-center space-x-6">
