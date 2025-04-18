@@ -6,6 +6,7 @@ import { SafetyStandards } from '../components/SafetyStandards';
 import { Advantages } from '../components/Advantages';
 import { Products } from '../components/Products';
 import { Contact } from '../components/Contact';
+import { CustomerSatisfaction } from '../components/CustomerSatisfaction';
 
 export function Home() {
   return (
@@ -16,6 +17,7 @@ export function Home() {
       <Products />
       <SafetyStandards />
       <Advantages />
+      <CustomerSatisfaction />
       <Contact />
     </>
   );
