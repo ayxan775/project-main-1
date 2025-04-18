@@ -1,6 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+interface AdvantageCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  index: number;
+}
+
 export function Advantages() {
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -33,7 +40,7 @@ export function Advantages() {
     }
   };
 
-  const AdvantageCard = ({ icon, title, description, index }) => (
+  const AdvantageCard = ({ icon, title, description, index }: AdvantageCardProps) => (
     <motion.div 
       className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 group border border-gray-100 dark:border-gray-700 h-full"
       variants={itemVariants}

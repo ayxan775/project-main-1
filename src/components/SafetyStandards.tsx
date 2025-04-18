@@ -1,6 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+interface CertificationCardProps {
+  title: string;
+  icon: React.ReactNode;
+  description: string;
+  color: string;
+  custom: number;
+}
+
 export function SafetyStandards() {
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -26,7 +34,7 @@ export function SafetyStandards() {
 
   const cardVariants = {
     hidden: { y: 30, opacity: 0 },
-    visible: i => ({
+    visible: (i: number) => ({
       y: 0,
       opacity: 1,
       transition: {
@@ -44,7 +52,7 @@ export function SafetyStandards() {
     }
   };
 
-  const CertificationCard = ({ title, icon, description, color, custom }) => (
+  const CertificationCard = ({ title, icon, description, color, custom }: CertificationCardProps) => (
     <motion.div 
       className={`bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl border-t-4 ${color} h-full relative overflow-hidden group`}
       custom={custom}

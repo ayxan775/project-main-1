@@ -1,6 +1,6 @@
 import React from 'react';
 import { Phone, Mail, MapPin, Facebook, Twitter, Linkedin } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 
 export function Footer() {
   return (
@@ -27,11 +27,11 @@ export function Footer() {
           <div>
             <h3 className="text-xl font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li><Link to="/" className="hover:text-blue-400">Home</Link></li>
-              <li><Link to="/products" className="hover:text-blue-400">Products</Link></li>
-              <li><Link to="/services" className="hover:text-blue-400">Services</Link></li>
-              <li><Link to="/about" className="hover:text-blue-400">About Us</Link></li>
-              <li><Link to="/contact" className="hover:text-blue-400">Contact</Link></li>
+              <li><Link href="/" className="hover:text-blue-400">Home</Link></li>
+              <li><Link href="/products" className="hover:text-blue-400">Products</Link></li>
+              <li><Link href="/services" className="hover:text-blue-400">Services</Link></li>
+              <li><Link href="/about" className="hover:text-blue-400">About Us</Link></li>
+              <li><Link href="/contact" className="hover:text-blue-400">Contact</Link></li>
             </ul>
           </div>
           <div>

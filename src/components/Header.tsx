@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Package2, Sun, Moon, Menu, X } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface HeaderProps {
@@ -12,7 +13,7 @@ interface HeaderProps {
 
 export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const location = useLocation();
+  const router = useRouter();
 
   // Handle scroll effect
   useEffect(() => {
@@ -26,7 +27,7 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
   // Close menu when route changes
   useEffect(() => {
     setIsMenuOpen(false);
-  }, [location.pathname, setIsMenuOpen]);
+  }, [router.pathname, setIsMenuOpen]);
 
   return (
     <header 
@@ -44,16 +45,18 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="relative w-10 h-10 overflow-hidden rounded-xl">
-              <img 
-                src="/images/logo.png" 
-                alt="AzPort Supply Logo" 
-                className="h-full w-full object-contain"
-              />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-              AzPort Supply
-            </span>
+            <Link href="/" className="flex items-center space-x-3 cursor-pointer">
+              <div className="relative w-20 h-20 overflow-hidden rounded-xl shadow-md">
+                <img 
+                  src="/images/logo.png" 
+                  alt="AzPort Supply Logo" 
+                  className="h-full w-full object-contain p-1"
+                />
+              </div>
+              <span className="text-2xl font-extrabold bg-gradient-to-r from-[rgb(17,108,128)] to-[rgb(56,178,198)] bg-clip-text text-transparent">
+                AzPort Supply
+              </span>
+            </Link>
           </motion.div>
           
           <div className="flex items-center space-x-6">
@@ -93,17 +96,17 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
                 transition={{ duration: 0.5 }}
               >
                 {[
-                  { to: "/", label: "Home" },
-                  { to: "/about", label: "About Us" },
-                  { to: "/products", label: "Products" },
-                  { to: "/certifications", label: "Certifications" },
-                  { to: "/testing", label: "Testing" }
+                  { href: "/", label: "Home" },
+                  { href: "/about", label: "About Us" },
+                  { href: "/products", label: "Products" },
+                  { href: "/certifications", label: "Certifications" },
+                  { href: "/testing", label: "Testing" }
                 ].map((item) => (
-                  <motion.li key={item.to} whileHover={{ scale: 1.05 }}>
+                  <motion.li key={item.href} whileHover={{ scale: 1.05 }}>
                     <Link
-                      to={item.to}
+                      href={item.href}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                        location.pathname === item.to
+                        router.pathname === item.href
                           ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                           : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                       }`}
@@ -114,7 +117,7 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
                 ))}
                 <motion.li whileHover={{ scale: 1.05 }}>
                   <Link
-                    to="/contact"
+                    href="/contact"
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-blue-600/20"
                   >
                     Contact Us
@@ -149,23 +152,23 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
                 }}
               >
                 {[
-                  { to: "/", label: "Home" },
-                  { to: "/about", label: "About Us" },
-                  { to: "/products", label: "Products" },
-                  { to: "/certifications", label: "Certifications" },
-                  { to: "/testing", label: "Testing" }
+                  { href: "/", label: "Home" },
+                  { href: "/about", label: "About Us" },
+                  { href: "/products", label: "Products" },
+                  { href: "/certifications", label: "Certifications" },
+                  { href: "/testing", label: "Testing" }
                 ].map((item) => (
                   <motion.li
-                    key={item.to}
+                    key={item.href}
                     variants={{
                       open: { opacity: 1, y: 0 },
                       closed: { opacity: 0, y: 20 }
                     }}
                   >
                     <Link
-                      to={item.to}
+                      href={item.href}
                       className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-                        location.pathname === item.to
+                        router.pathname === item.href
                           ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                           : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                       }`}
@@ -182,7 +185,7 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
                   }}
                 >
                   <Link
-                    to="/contact"
+                    href="/contact"
                     className="block px-4 py-3 text-center bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg"
                     onClick={() => setIsMenuOpen(false)}
                   >
