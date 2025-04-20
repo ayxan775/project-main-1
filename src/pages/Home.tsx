@@ -10,7 +10,7 @@ import { CustomerSatisfaction } from '../components/CustomerSatisfaction';
 
 export function Home() {
   return (
-    <>
+    <div className="space-y-8 md:space-y-12">
       <Hero />
       <OfficialRepresentative />
       <AboutAzPort />
@@ -19,6 +19,6 @@ export function Home() {
       <Advantages />
       <CustomerSatisfaction />
       <Contact />
-    </>
+    </div>
   );
 }

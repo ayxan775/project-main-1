@@ -99,7 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     // Handle POST method (create)
     if (req.method === 'POST') {
-      const { name, description, image, specs, useCases, category, images } = req.body;
+      const { name, description, image, specs, useCases, category, images, document } = req.body;
       
       if (!name) {
         return res.status(400).json({ message: 'Product name is required' });
@@ -107,7 +107,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       const db = await getDB();
       const result = await db.run(
-        'INSERT INTO products (name, description, image, specs, useCases, category, images) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO products (name, description, image, specs, useCases, category, images, document) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         [
           name,
           description || '',
@@ -115,7 +115,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           JSON.stringify(specs || []),
           JSON.stringify(useCases || []),
           category || '',
-          JSON.stringify(images || [])
+          JSON.stringify(images || []),
+          document || ''
         ]
       );
       
@@ -131,7 +132,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     // Handle PUT method (update)
     if (req.method === 'PUT' && req.query.id) {
-      const { name, description, image, specs, useCases, category, images } = req.body;
+      const { name, description, image, specs, useCases, category, images, document } = req.body;
       
       if (!name) {
         return res.status(400).json({ message: 'Product name is required' });
@@ -139,7 +140,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       const db = await getDB();
       await db.run(
-        'UPDATE products SET name = ?, description = ?, image = ?, specs = ?, useCases = ?, category = ?, images = ? WHERE id = ?',
+        'UPDATE products SET name = ?, description = ?, image = ?, specs = ?, useCases = ?, category = ?, images = ?, document = ? WHERE id = ?',
         [
           name,
           description || '',
@@ -148,6 +149,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           JSON.stringify(useCases || []),
           category || '',
           JSON.stringify(images || []),
+          document || '',
           req.query.id
         ]
       );

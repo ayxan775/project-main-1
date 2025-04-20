@@ -2,11 +2,12 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/admin": "pages/admin.js",
-  "/products": "pages/products.js",
   "/": "pages/index.js",
-  "/404": "pages/404.js",
+  "/products": "pages/products.js",
   "/api/products": "pages/api/products.js",
-  "/api/auth/verify": "pages/api/auth/verify.js",
-  "/api/categories": "pages/api/categories.js"
+  "/admin": "pages/admin.js",
+  "/about": "pages/about.js",
+  "/certifications": "pages/certifications.js",
+  "/testing": "pages/testing.js",
+  "/404": "pages/404.js"
 }

@@ -58,12 +58,28 @@ export async function initializeDB() {
         useCases TEXT,
         category TEXT,
         images TEXT,
+        document TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (category) REFERENCES categories(name)
       );
     `);
     
     console.log('Database tables created');
+
+    // Alter existing products table to add document column if it doesn't exist
+    try {
+      // Check if the document column exists
+      const tableInfo = await db.all('PRAGMA table_info(products)');
+      const documentColumnExists = tableInfo.some((column: any) => column.name === 'document');
+      
+      if (!documentColumnExists) {
+        // Add document column to products table
+        await db.exec('ALTER TABLE products ADD COLUMN document TEXT');
+        console.log('Added document column to products table');
+      }
+    } catch (error) {
+      console.error('Error altering products table:', error);
+    }
 
     // Check if admin user exists, if not create it
     const adminUser = await db.get('SELECT * FROM users WHERE username = ?', ['admin']);

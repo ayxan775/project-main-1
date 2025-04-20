@@ -1,8 +1,59 @@
-import React from 'react';
-import { MapPin, Phone, Mail, Send, MessageSquare, Clock, Map } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapPin, Phone, Mail, Send, MessageSquare, Clock, Map, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export function Contact() {
+interface ContactFormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+interface ContactProps {
+  isModal?: boolean;
+  modalTitle?: string;
+  initialValues?: ContactFormData;
+  onClose?: () => void;
+}
+
+export function Contact({ isModal, modalTitle, initialValues, onClose }: ContactProps) {
+  const [formData, setFormData] = useState<ContactFormData>(initialValues || {
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Here you would handle form submission, including SMTP logic
+    console.log('Form submitted:', formData);
+    
+    // Show success message
+    alert('Your message has been sent! We will contact you shortly.');
+    
+    // Reset form
+    setFormData({
+      name: '',
+      email: '',
+      subject: '',
+      message: ''
+    });
+    
+    // Close modal if in modal mode
+    if (isModal && onClose) {
+      onClose();
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -25,6 +76,110 @@ export function Contact() {
     }
   };
 
+  // Render just the form if used in modal mode
+  if (isModal) {
+    return (
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{modalTitle || 'Contact Us'}</h3>
+          {onClose && (
+            <button 
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          )}
+        </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <input 
+                type="text" 
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+                placeholder="Your name"
+                required
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Mail className="h-5 w-5 text-gray-400" />
+              </div>
+              <input 
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+                placeholder="your.email@example.com"
+                required
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subject</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MessageSquare className="h-5 w-5 text-gray-400" />
+              </div>
+              <input 
+                type="text"
+                name="subject"
+                value={formData.subject}
+                onChange={handleInputChange}
+                className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+                placeholder="How can we help?"
+                required
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Message</label>
+            <textarea 
+              rows={4}
+              name="message"
+              value={formData.message}
+              onChange={handleInputChange}
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+              placeholder="Your message here..."
+              required
+            ></textarea>
+          </div>
+          
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+          >
+            <button 
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-3 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center space-x-2"
+            >
+              <span>Send Message</span>
+              <Send className="h-5 w-5 ml-2" />
+            </button>
+          </motion.div>
+        </form>
+      </div>
+    );
+  }
+
+  // Full Contact page with location and other details
   return (
     <section className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
       <div className="container mx-auto px-4 relative">
@@ -222,7 +377,7 @@ export function Contact() {
                 Send Us a Message
               </motion.h3>
               
-              <motion.form className="space-y-6" variants={itemVariants}>
+              <motion.form className="space-y-6" variants={itemVariants} onSubmit={handleSubmit}>
                 <motion.div variants={itemVariants}>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
                   <div className="relative">
@@ -233,6 +388,9 @@ export function Contact() {
                     </div>
                     <input 
                       type="text" 
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
                       className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
                       placeholder="Your name"
                       required
@@ -248,6 +406,9 @@ export function Contact() {
                     </div>
                     <input 
                       type="email" 
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
                       className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
                       placeholder="your.email@example.com"
                       required
@@ -263,6 +424,9 @@ export function Contact() {
                     </div>
                     <input 
                       type="text" 
+                      name="subject"
+                      value={formData.subject}
+                      onChange={handleInputChange}
                       className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
                       placeholder="How can we help?"
                       required
@@ -274,6 +438,9 @@ export function Contact() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Message</label>
                   <textarea 
                     rows={5}
+                    name="message"
+                    value={formData.message}
+                    onChange={handleInputChange}
                     className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
                     placeholder="Your message here..."
                     required

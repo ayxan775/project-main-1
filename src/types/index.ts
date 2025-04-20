@@ -7,6 +7,7 @@ export interface Product {
   useCases: string[];
   category: string;
   images?: string[];
+  document?: string;
   created_at?: string;
 }
 

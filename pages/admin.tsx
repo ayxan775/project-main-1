@@ -10,6 +10,8 @@ import { AdminSidePanel } from '../src/components/AdminSidePanel';
 import { CategoryManager } from '../src/components/CategoryManager';
 import { Product } from '../src/types';
 import { ImageUpload } from '../src/components/ImageUpload';
+import { DocumentUpload } from '../src/components/DocumentUpload';
+import { CatalogManager } from '../src/components/CatalogManager';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -47,7 +49,8 @@ export default function AdminPage() {
     category: '',
     specs: [] as string[],
     useCases: [] as string[],
-    images: [] as string[] // Interior images
+    images: [] as string[], // Interior images
+    document: ''
   });
   
   const [newSpec, setNewSpec] = useState('');
@@ -58,6 +61,7 @@ export default function AdminPage() {
   const [restoreStatus, setRestoreStatus] = useState<string | null>(null);
   const [backupFile, setBackupFile] = useState<File | null>(null);
   const [lastBackupDate, setLastBackupDate] = useState<string | null>(null);
+  const [hasCatalog, setHasCatalog] = useState<boolean>(false);
   
   // Fetch products with token verification
   useEffect(() => {
@@ -97,6 +101,25 @@ export default function AdminPage() {
       fetchCategories();
     }
   }, [isLoggedIn]);
+  
+  // Get catalog status for backup info
+  useEffect(() => {
+    if (isLoggedIn && activeSection === 'backup') {
+      const checkCatalog = async () => {
+        try {
+          const response = await fetch('/api/catalog/status');
+          if (response.ok) {
+            const data = await response.json();
+            setHasCatalog(!!data.catalog);
+          }
+        } catch (error) {
+          console.error('Error checking catalog status:', error);
+        }
+      };
+      
+      checkCatalog();
+    }
+  }, [isLoggedIn, activeSection]);
   
   // Handle login form submission
   const handleLogin = async (e: React.FormEvent) => {
@@ -285,7 +308,8 @@ export default function AdminPage() {
       category: '',
       specs: [],
       useCases: [],
-      images: []
+      images: [],
+      document: ''
     });
     setShowProductModal(false);
   };
@@ -305,7 +329,8 @@ export default function AdminPage() {
       category: product.category,
       specs: [...product.specs],
       useCases: [...product.useCases],
-      images: interiorImages // Interior images
+      images: interiorImages, // Interior images
+      document: product.document || ''
     });
     
     setShowProductModal(true);
@@ -322,7 +347,8 @@ export default function AdminPage() {
       category: '',
       specs: [],
       useCases: [],
-      images: []
+      images: [],
+      document: ''
     });
     setShowProductModal(true);
   };
@@ -431,6 +457,8 @@ export default function AdminPage() {
   // Create backup of products and categories
   const handleCreateBackup = async () => {
     try {
+      setBackupStatus('Creating backup...');
+      
       // Get full category data from API
       const categoriesResponse = await fetch('/api/categories');
       if (!categoriesResponse.ok) {
@@ -438,11 +466,27 @@ export default function AdminPage() {
       }
       const categoriesData = await categoriesResponse.json();
       
-      // Combine products and categories into a single backup object
+      // Get catalog information
+      const catalogResponse = await fetch('/api/catalog/status');
+      let catalogData = null;
+      if (catalogResponse.ok) {
+        const catalogInfo = await catalogResponse.json();
+        if (catalogInfo.catalog) {
+          catalogData = {
+            catalog: catalogInfo.catalog,
+            fileName: catalogInfo.fileName,
+            lastUpdated: catalogInfo.lastUpdated
+          };
+        }
+      }
+      
+      // Combine products, categories, and catalog into a single backup object
       const backupData = {
         products: products,
         categories: categoriesData,
-        timestamp: new Date().toISOString()
+        catalog: catalogData,
+        timestamp: new Date().toISOString(),
+        version: '1.1' // Version for tracking backup format changes
       };
       
       // Convert to JSON and create a downloadable file
@@ -453,7 +497,7 @@ export default function AdminPage() {
       // Create a download link and trigger it
       const a = document.createElement('a');
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      a.download = `product-data-backup-${timestamp}.json`;
+      a.download = `site-data-backup-${timestamp}.json`;
       a.href = url;
       a.click();
       
@@ -500,22 +544,33 @@ export default function AdminPage() {
       }
       
       // Confirm restore
-      if (!confirm('Are you sure you want to restore from this backup? This will replace all current products and categories.')) {
+      if (!confirm('Are you sure you want to restore from this backup? This will replace all current products, categories, and catalog data.')) {
         return;
       }
       
       // Actually restore the data via API
       setRestoreStatus('Restoring data...');
       
+      // Get current products to check for duplicates
+      const productsResponse = await fetch('/api/products');
+      const existingProducts = await productsResponse.json();
+      
+      // Counters for tracking restore statistics
+      let categoriesCreated = 0;
+      let categoriesUpdated = 0;
+      let productsCreated = 0;
+      let productsUpdated = 0;
+      let catalogUpdated = false;
+      
       // First restore categories
       for (const category of backupData.categories) {
         // Check if category exists
         const existingCategories = await fetch('/api/categories');
         const existingCategoriesData = await existingCategories.json();
-        const exists = existingCategoriesData.some((c: any) => c.name === category.name);
+        const existingCategory = existingCategoriesData.find((c: any) => c.name === category.name);
         
-        if (!exists) {
-          // Create category
+        if (!existingCategory) {
+          // Create category if it doesn't exist
           await fetch('/api/categories', {
             method: 'POST',
             headers: {
@@ -527,14 +582,35 @@ export default function AdminPage() {
               description: category.description || ''
             })
           });
+          categoriesCreated++;
+        } else {
+          // Update existing category
+          await fetch(`/api/categories?id=${existingCategory.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              name: category.name,
+              description: category.description || ''
+            })
+          });
+          categoriesUpdated++;
         }
       }
       
-      // Then restore products
+      // Then restore products without creating duplicates
       for (const product of backupData.products) {
-        // For products, we'll update if they exist, otherwise create new
-        const method = 'POST'; // Always create new for simplicity
-        await fetch('/api/products', {
+        // Check if product with the same name exists
+        const existingProduct = existingProducts.find((p: Product) => p.name === product.name);
+        
+        const method = existingProduct ? 'PUT' : 'POST';
+        const url = existingProduct 
+          ? `/api/products?id=${existingProduct.id}` 
+          : '/api/products';
+        
+        await fetch(url, {
           method,
           headers: {
             'Content-Type': 'application/json',
@@ -547,16 +623,44 @@ export default function AdminPage() {
             image: product.image,
             images: product.images || [],
             specs: product.specs || [],
-            useCases: product.useCases || []
+            useCases: product.useCases || [],
+            document: product.document || ''
           })
         });
+        
+        if (existingProduct) {
+          productsUpdated++;
+        } else {
+          productsCreated++;
+        }
+      }
+      
+      // Restore catalog if it exists in the backup
+      if (backupData.catalog && backupData.catalog.catalog) {
+        await fetch('/api/catalog/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            catalog: backupData.catalog.catalog
+          })
+        });
+        catalogUpdated = true;
       }
       
       // Refresh data after restore
       await fetchProducts();
       await fetchCategories();
       
-      setRestoreStatus('Restore completed successfully!');
+      // Build detailed success message
+      const successMessage = `Restore completed successfully! 
+      Created: ${categoriesCreated} categories, ${productsCreated} products
+      Updated: ${categoriesUpdated} categories, ${productsUpdated} products
+      ${catalogUpdated ? 'Catalog PDF was updated.' : ''}`;
+      
+      setRestoreStatus(successMessage);
       setBackupFile(null);
       
       // Reset file input
@@ -568,7 +672,7 @@ export default function AdminPage() {
       // Clear status after a few seconds
       setTimeout(() => {
         setRestoreStatus(null);
-      }, 5000);
+      }, 10000); // Longer timeout to allow reading the stats
     } catch (error) {
       console.error('Error restoring from backup:', error);
       setRestoreStatus(`Restore failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -579,68 +683,449 @@ export default function AdminPage() {
     }
   };
   
-  // Login form
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
-        <Head>
-          <title>Admin Login</title>
-        </Head>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
-          <div className="flex items-center justify-center mb-6">
-            <Package className="w-8 h-8 text-blue-600 dark:text-blue-400 mr-2" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Admin Login</h1>
+  // Render content based on active section
+  const renderContent = () => {
+    if (!isLoggedIn) {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+          <Head>
+            <title>Admin Login</title>
+          </Head>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
+            <div className="flex items-center justify-center mb-6">
+              <Package className="w-8 h-8 text-blue-600 dark:text-blue-400 mr-2" />
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Admin Login</h1>
+            </div>
+            
+            {loginError && (
+              <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 flex items-start">
+                <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                <p>{loginError}</p>
+              </div>
+            )}
+            
+            <form onSubmit={handleLogin}>
+              <div className="mb-4">
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Username
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                  required
+                />
+              </div>
+              
+              <div className="mb-6">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                  required
+                />
+              </div>
+              
+              <button
+                type="submit"
+                className="w-full flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              >
+                <LogIn className="w-5 h-5 mr-2" />
+                Login
+              </button>
+            </form>
           </div>
-          
-          {loginError && (
-            <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 flex items-start">
-              <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-              <p>{loginError}</p>
-            </div>
-          )}
-          
-          <form onSubmit={handleLogin}>
-            <div className="mb-4">
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Username
-              </label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                required
-              />
-            </div>
-            
-            <div className="mb-6">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                required
-              />
-            </div>
-            
-            <button
-              type="submit"
-              className="w-full flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-            >
-              <LogIn className="w-5 h-5 mr-2" />
-              Login
-            </button>
-          </form>
         </div>
-      </div>
-    );
-  }
-  
+      );
+    }
+
+    switch (activeSection) {
+      case 'products':
+        return (
+          <div className="space-y-8">
+            {/* Add Product Button and Products Table */}
+            <div className="flex justify-between items-center mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Products</h1>
+              <button
+                onClick={handleAddProduct}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors shadow-sm hover:shadow-md"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Product
+              </button>
+            </div>
+
+            {/* Products Table */}
+            <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <h2 className="text-lg font-medium text-gray-900 dark:text-white">Products</h2>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    {/* Search Input */}
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search products..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full sm:w-64 px-3 py-2 pl-10 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                      />
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                    </div>
+                    
+                    {/* Category Filter */}
+                    <select
+                      value={categoryFilter}
+                      onChange={(e) => setCategoryFilter(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    >
+                      <option value="">All Categories</option>
+                      {categories.map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              {loading ? (
+                <div className="p-6 text-center">
+                  <p className="text-gray-500 dark:text-gray-400">Loading products...</p>
+                </div>
+              ) : filteredProducts.length === 0 ? (
+                <div className="p-6 text-center">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    {products.length === 0 
+                      ? "No products found." 
+                      : "No products match your search criteria."}
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-750">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          ID
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Category
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Images
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {filteredProducts.map((product) => (
+                        <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {product.id}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                {product.name}
+                              </div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">
+                                {product.description}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                              {product.category}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex -space-x-2">
+                              {/* Cover image first */}
+                              {product.image && (
+                                <div className="relative z-10">
+                                  <img
+                                    src={product.image}
+                                    alt={`${product.name} - Cover`}
+                                    className="h-10 w-10 rounded-md object-cover ring-2 ring-white dark:ring-gray-800 border-2 border-blue-500"
+                                    title="Cover Image"
+                                  />
+                                </div>
+                              )}
+                              
+                              {/* Interior images - filter out the cover image if it's accidentally duplicated */}
+                              {(product.images || [])
+                                .filter(img => img && img !== product.image) // Ensure no duplicates with cover
+                                .slice(0, 3)
+                                .map((img, index) => (
+                                  <img
+                                    key={index}
+                                    src={img}
+                                    alt={`${product.name} - Interior ${index + 1}`}
+                                    className="h-10 w-10 rounded-md object-cover ring-2 ring-white dark:ring-gray-800"
+                                    title={`Interior Image ${index + 1}`}
+                                  />
+                                ))
+                              }
+                              
+                              {/* Show count if there are more images - count only unique images that aren't the cover */}
+                              {product.images && 
+                               product.images.filter(img => img && img !== product.image).length > 3 && (
+                                <div className="h-10 w-10 rounded-md bg-gray-100 dark:bg-gray-700 flex items-center justify-center ring-2 ring-white dark:ring-gray-800 text-xs font-medium text-gray-500 dark:text-gray-400">
+                                  +{product.images.filter(img => img && img !== product.image).length - 3}
+                                </div>
+                              )}
+                              
+                              {/* No images placeholder */}
+                              {!product.image && (!product.images || product.images.length === 0) && (
+                                <div className="h-10 w-10 rounded-md bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                  <ImageIcon className="h-5 w-5 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                            <div className="flex justify-end space-x-3">
+                              <button
+                                onClick={() => handleEditProduct(product)}
+                                className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                              >
+                                <Edit className="w-5 h-5" />
+                                <span className="sr-only">Edit</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteProduct(product.id)}
+                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                              >
+                                <Trash2 className="w-5 h-5" />
+                                <span className="sr-only">Delete</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      case 'categories':
+        return <CategoryManager token={token} />;
+      case 'catalog':
+        return <CatalogManager />;
+      case 'backup':
+        return (
+          <div className="space-y-8">
+            {/* Backup Section Header */}
+            <div className="flex justify-between items-center mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Backup & Restore</h1>
+              <button
+                onClick={handleCreateBackup}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors shadow-sm hover:shadow-md"
+              >
+                <Download className="w-5 h-5 mr-2" />
+                Create Backup
+              </button>
+            </div>
+            
+            {/* Backup Status */}
+            {backupStatus && (
+              <div className="mb-6 p-4 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-300 flex items-start">
+                <CheckCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                <p>{backupStatus}</p>
+              </div>
+            )}
+            
+            {/* Restore Section */}
+            <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Restore Data</h2>
+              </div>
+              
+              <div className="p-6">
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  Upload a previously created backup file to restore your products and categories. 
+                  Existing items with the same name will be updated rather than creating duplicates.
+                </p>
+                
+                {/* File Upload */}
+                <div className="mb-6">
+                  <label htmlFor="backup-file" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Select Backup File
+                  </label>
+                  <input
+                    id="backup-file"
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                  />
+                </div>
+                
+                {/* Restore Button */}
+                <button
+                  onClick={handleRestore}
+                  disabled={!backupFile}
+                  className={`flex items-center px-4 py-2 rounded-md font-medium ${
+                    backupFile 
+                      ? 'bg-green-600 hover:bg-green-700 text-white' 
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                  } transition-colors`}
+                >
+                  <Upload className="w-5 h-5 mr-2" />
+                  Restore from Backup
+                </button>
+                
+                {/* Restore Status */}
+                {restoreStatus && (
+                  <div className={`mt-4 p-3 rounded-lg flex items-start ${
+                    restoreStatus.includes('failed') || restoreStatus.includes('select')
+                      ? 'bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
+                      : 'bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300'
+                  }`}>
+                    {restoreStatus.includes('failed') || restoreStatus.includes('select')
+                      ? <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                      : <CheckCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                    }
+                    <p>{restoreStatus}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Backup Info */}
+            <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Backup Information</h2>
+              </div>
+              
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Data to be backed up:</h3>
+                      <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                        <li>Products ({products.length} items)</li>
+                        <li>Categories ({categories.length} items)</li>
+                        <li>Catalog PDF {hasCatalog ? '(1 file)' : '(none)'}</li>
+                      </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Last backup:</h3>
+                    <p className="text-gray-700 dark:text-gray-300">
+                      {lastBackupDate 
+                        ? new Date(lastBackupDate).toLocaleString() 
+                        : 'No backup has been created yet'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'password':
+        return (
+          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+              Change Password
+            </h2>
+            
+            {passwordChangeError && (
+              <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 flex items-start">
+                <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                <p>{passwordChangeError}</p>
+              </div>
+            )}
+            
+            {passwordChangeSuccess && (
+              <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-300 flex items-start">
+                <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                <p>{passwordChangeSuccess}</p>
+              </div>
+            )}
+            
+            <form onSubmit={handlePasswordChange} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Current Password
+                  </label>
+                  <input
+                    id="currentPassword"
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    required
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    New Password
+                  </label>
+                  <input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    required
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Confirm New Password
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="flex space-x-3 pt-2">
+                <button
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md flex items-center transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  <Key className="w-5 h-5 mr-2" />
+                  Update Password
+                </button>
+              </div>
+            </form>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   // Admin dashboard
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
@@ -825,6 +1310,19 @@ export default function AdminPage() {
                         />
                       </div>
 
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Product Documentation
+                        </label>
+                        <DocumentUpload
+                          document={formData.document}
+                          onDocumentChange={(document) => setFormData(prev => ({ ...prev, document }))}
+                        />
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          Upload product specification sheets, manuals, or other documentation. This document will be available for download on the product page.
+                        </p>
+                      </div>
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Specifications
@@ -920,378 +1418,7 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* Main Content */}
-            {activeSection === 'products' && (
-              <div className="space-y-8">
-                {/* Add Product Button and Products Table */}
-                <div className="flex justify-between items-center mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Products</h1>
-                  <button
-                    onClick={handleAddProduct}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors shadow-sm hover:shadow-md"
-                  >
-                    <Plus className="w-5 h-5 mr-2" />
-                    Add Product
-                  </button>
-                </div>
-
-                {/* Products Table */}
-                <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                  <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                      <h2 className="text-lg font-medium text-gray-900 dark:text-white">Products</h2>
-                      
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        {/* Search Input */}
-                        <div className="relative">
-                          <input
-                            type="text"
-                            placeholder="Search products..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full sm:w-64 px-3 py-2 pl-10 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                          />
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                          </div>
-                        </div>
-                        
-                        {/* Category Filter */}
-                        <select
-                          value={categoryFilter}
-                          onChange={(e) => setCategoryFilter(e.target.value)}
-                          className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        >
-                          <option value="">All Categories</option>
-                          {categories.map((category) => (
-                            <option key={category} value={category}>
-                              {category}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {loading ? (
-                    <div className="p-6 text-center">
-                      <p className="text-gray-500 dark:text-gray-400">Loading products...</p>
-                    </div>
-                  ) : filteredProducts.length === 0 ? (
-                    <div className="p-6 text-center">
-                      <p className="text-gray-500 dark:text-gray-400">
-                        {products.length === 0 
-                          ? "No products found." 
-                          : "No products match your search criteria."}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead className="bg-gray-50 dark:bg-gray-750">
-                          <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                              ID
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                              Name
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                              Category
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                              Images
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                              Actions
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                          {filteredProducts.map((product) => (
-                            <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                {product.id}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div>
-                                  <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                    {product.name}
-                                  </div>
-                                  <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">
-                                    {product.description}
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                                  {product.category}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex -space-x-2">
-                                  {/* Cover image first */}
-                                  {product.image && (
-                                    <div className="relative z-10">
-                                      <img
-                                        src={product.image}
-                                        alt={`${product.name} - Cover`}
-                                        className="h-10 w-10 rounded-md object-cover ring-2 ring-white dark:ring-gray-800 border-2 border-blue-500"
-                                        title="Cover Image"
-                                      />
-                                    </div>
-                                  )}
-                                  
-                                  {/* Interior images - filter out the cover image if it's accidentally duplicated */}
-                                  {(product.images || [])
-                                    .filter(img => img && img !== product.image) // Ensure no duplicates with cover
-                                    .slice(0, 3)
-                                    .map((img, index) => (
-                                      <img
-                                        key={index}
-                                        src={img}
-                                        alt={`${product.name} - Interior ${index + 1}`}
-                                        className="h-10 w-10 rounded-md object-cover ring-2 ring-white dark:ring-gray-800"
-                                        title={`Interior Image ${index + 1}`}
-                                      />
-                                    ))
-                                  }
-                                  
-                                  {/* Show count if there are more images - count only unique images that aren't the cover */}
-                                  {product.images && 
-                                   product.images.filter(img => img && img !== product.image).length > 3 && (
-                                    <div className="h-10 w-10 rounded-md bg-gray-100 dark:bg-gray-700 flex items-center justify-center ring-2 ring-white dark:ring-gray-800 text-xs font-medium text-gray-500 dark:text-gray-400">
-                                      +{product.images.filter(img => img && img !== product.image).length - 3}
-                                    </div>
-                                  )}
-                                  
-                                  {/* No images placeholder */}
-                                  {!product.image && (!product.images || product.images.length === 0) && (
-                                    <div className="h-10 w-10 rounded-md bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                      <ImageIcon className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                <div className="flex justify-end space-x-3">
-                                  <button
-                                    onClick={() => handleEditProduct(product)}
-                                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                  >
-                                    <Edit className="w-5 h-5" />
-                                    <span className="sr-only">Edit</span>
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteProduct(product.id)}
-                                    className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                  >
-                                    <Trash2 className="w-5 h-5" />
-                                    <span className="sr-only">Delete</span>
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {activeSection === 'categories' && (
-              <CategoryManager token={token} />
-            )}
-
-            {activeSection === 'password' && (
-              <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
-                  Change Password
-                </h2>
-                
-                {passwordChangeError && (
-                  <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 flex items-start">
-                    <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-                    <p>{passwordChangeError}</p>
-                  </div>
-                )}
-                
-                {passwordChangeSuccess && (
-                  <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-300 flex items-start">
-                    <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-                    <p>{passwordChangeSuccess}</p>
-                  </div>
-                )}
-                
-                <form onSubmit={handlePasswordChange} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Current Password
-                      </label>
-                      <input
-                        id="currentPassword"
-                        type="password"
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="md:col-span-2">
-                      <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        New Password
-                      </label>
-                      <input
-                        id="newPassword"
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="md:col-span-2">
-                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Confirm New Password
-                      </label>
-                      <input
-                        id="confirmPassword"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex space-x-3 pt-2">
-                    <button
-                      type="submit"
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md flex items-center transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    >
-                      <Key className="w-5 h-5 mr-2" />
-                      Update Password
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {activeSection === 'backup' && (
-              <div className="space-y-8">
-                {/* Backup Section Header */}
-                <div className="flex justify-between items-center mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Backup & Restore</h1>
-                  <button
-                    onClick={handleCreateBackup}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors shadow-sm hover:shadow-md"
-                  >
-                    <Download className="w-5 h-5 mr-2" />
-                    Create Backup
-                  </button>
-                </div>
-                
-                {/* Backup Status */}
-                {backupStatus && (
-                  <div className="mb-6 p-4 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-300 flex items-start">
-                    <CheckCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-                    <p>{backupStatus}</p>
-                  </div>
-                )}
-                
-                {/* Restore Section */}
-                <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                  <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">Restore Data</h2>
-                  </div>
-                  
-                  <div className="p-6">
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      Upload a previously created backup file to restore your products and categories.
-                    </p>
-                    
-                    {/* File Upload */}
-                    <div className="mb-6">
-                      <label htmlFor="backup-file" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Select Backup File
-                      </label>
-                      <input
-                        id="backup-file"
-                        type="file"
-                        accept=".json"
-                        onChange={handleFileChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                      />
-                    </div>
-                    
-                    {/* Restore Button */}
-                    <button
-                      onClick={handleRestore}
-                      disabled={!backupFile}
-                      className={`flex items-center px-4 py-2 rounded-md font-medium ${
-                        backupFile 
-                          ? 'bg-green-600 hover:bg-green-700 text-white' 
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                      } transition-colors`}
-                    >
-                      <Upload className="w-5 h-5 mr-2" />
-                      Restore from Backup
-                    </button>
-                    
-                    {/* Restore Status */}
-                    {restoreStatus && (
-                      <div className={`mt-4 p-3 rounded-lg flex items-start ${
-                        restoreStatus.includes('failed') || restoreStatus.includes('select')
-                          ? 'bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
-                          : 'bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300'
-                      }`}>
-                        {restoreStatus.includes('failed') || restoreStatus.includes('select')
-                          ? <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-                          : <CheckCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-                        }
-                        <p>{restoreStatus}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Backup Info */}
-                <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                  <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">Backup Information</h2>
-                  </div>
-                  
-                  <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Data to be backed up:</h3>
-                        <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
-                          <li>Products ({products.length} items)</li>
-                          <li>Categories ({categories.length} items)</li>
-                        </ul>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Last backup:</h3>
-                        <p className="text-gray-700 dark:text-gray-300">
-                          {lastBackupDate 
-                            ? new Date(lastBackupDate).toLocaleString() 
-                            : 'No backup has been created yet'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {renderContent()}
           </main>
         </div>
       </div>

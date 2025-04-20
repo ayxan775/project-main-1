@@ -1,7 +1,52 @@
-import React from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Download, AlertCircle } from 'lucide-react';
 
 export function AboutAzPort() {
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  const handleDownloadCatalog = async () => {
+    try {
+      setDownloadError(null);
+      
+      // Add a timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/catalog/download?t=${timestamp}`);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to download catalog');
+      }
+
+      // Create a blob from the response
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      // Get filename from the Content-Disposition header if available
+      let filename = 'catalog.pdf';
+      const contentDisposition = response.headers.get('Content-Disposition');
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading catalog:', error);
+      setDownloadError(error instanceof Error ? error.message : 'Failed to download catalog');
+      setTimeout(() => setDownloadError(null), 5000);
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -138,8 +183,9 @@ export function AboutAzPort() {
             ></motion.div>
             
             <motion.div
-              className="relative rounded-xl overflow-hidden shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 z-10 bg-white dark:bg-gray-800 p-3"
+              className="relative rounded-xl overflow-hidden shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 z-10 bg-white dark:bg-gray-800 p-3 cursor-pointer group"
               whileHover={{ y: -5 }}
+              onClick={handleDownloadCatalog}
             >
               <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-transparent opacity-30 z-0"></div>
               <img 
@@ -148,19 +194,33 @@ export function AboutAzPort() {
                 className="rounded-lg w-full h-auto object-cover relative z-10"
               />
               <div className="absolute bottom-6 left-6 right-6 p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg z-20">
-                <div className="flex items-center">
-                  <div className="bg-blue-600 text-white p-2 rounded mr-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="bg-blue-600 text-white p-2 rounded mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-white">Main Facility</h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Baku, Azerbaijan</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">Main Facility</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Baku, Azerbaijan</p>
-                  </div>
+                  <motion.div 
+                    className="bg-blue-600 text-white p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    <Download className="h-5 w-5" />
+                  </motion.div>
                 </div>
               </div>
+              {downloadError && (
+                <div className="absolute top-4 left-4 right-4 p-3 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 flex items-start">
+                  <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                  <p>{downloadError}</p>
+                </div>
+              )}
             </motion.div>
           </motion.div>
           

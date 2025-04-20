@@ -126,12 +126,8 @@ export function OfficialRepresentative() {
                 </motion.div>
               </div>
               
-              <div className="mt-10 pt-6 border-t border-gray-100 dark:border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <img src="/eu-flag.png" alt="European Union" className="h-6 mr-2" />
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Made in Europe</span>
-                  </div>
+              <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+                <div className="flex items-center justify-end">
                   <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-bold px-4 py-1 rounded-full">
                     Premium Partner
                   </div>

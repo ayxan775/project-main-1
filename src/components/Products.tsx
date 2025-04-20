@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronRight, X, Search, Grid, List, SlidersHorizontal, 
   Download, Share2, ChevronLeft, 
-  Heart, Info, Truck, Shield, ArrowRight, FileText, Phone, AlertTriangle
+  Heart, Info, Truck, Shield, ArrowRight, FileText, Phone, AlertTriangle, Mail, MessageSquare, Send
 } from 'lucide-react';
 import { Product } from '../types';
+import { Contact } from './Contact';
 
 export function Products() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -20,6 +21,8 @@ export function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showContactModal, setShowContactModal] = useState<boolean>(false);
+  const [displayLimit, setDisplayLimit] = useState<number>(6);
 
   // Fetch products from API
   useEffect(() => {
@@ -227,9 +230,15 @@ export function Products() {
           layout
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          whileHover={{ y: -5 }}
+          transition={{ 
+            duration: 0.6,
+            ease: [0.43, 0.13, 0.23, 0.96],
+            layout: { duration: 0.4 }
+          }}
           key={product.id}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transform hover:shadow-xl transition duration-300"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-500"
           onClick={() => setSelectedProduct(product)}
         >
           {cardContent}
@@ -242,84 +251,27 @@ export function Products() {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0 }}
+          whileHover={{ x: 5 }}
+          transition={{ 
+            duration: 0.6,
+            ease: [0.43, 0.13, 0.23, 0.96],
+            layout: { duration: 0.4 }
+          }}
           key={product.id}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row transform hover:shadow-xl transition duration-300"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row group hover:shadow-xl transition-all duration-500"
           onClick={() => setSelectedProduct(product)}
         >
-          <div className="md:w-1/3">
-            <div className="relative h-full">
-              {coverImage ? (
-                <img 
-                  src={coverImage} 
-                  alt={product.name}
-                  className="w-full h-64 md:h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-64 md:h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                  <FileText className="h-12 w-12 text-gray-400" />
-                </div>
-              )}
-              <div className="absolute top-4 right-4">
-                <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm shadow-md">
-                  {product.category}
-                </span>
-              </div>
-              {hasMultipleImages && (
-                <div className="absolute top-14 right-4">
-                  <span className="bg-gray-800/70 text-white px-3 py-1 rounded-full text-xs shadow-md">
-                    {getInteriorImages(product).length} photos
-                  </span>
-                </div>
-              )}
-              <button 
-                onClick={(e) => toggleFavorite(product.id, e)}
-                className="absolute top-4 left-4 bg-white/80 dark:bg-gray-800/80 p-2 rounded-full shadow-md"
-              >
-                <Heart 
-                  className={`h-5 w-5 ${isFavorite[product.id] ? 'fill-red-500 text-red-500' : 'text-gray-600 dark:text-gray-300'}`} 
-                />
-              </button>
-            </div>
-          </div>
-          <div className="p-6 md:w-2/3 flex flex-col justify-between">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{product.name}</h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">{product.description}</p>
-              
-              <div className="mb-4">
-                {product.specs.slice(0, 2).map((spec, index) => (
-                  <div key={index} className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-1">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
-                    {spec}
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <button
-                onClick={() => setSelectedProduct(product)}
-                className="flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold group"
-              >
-                View Details 
-                <ChevronRight className="h-4 w-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
-              </button>
-              <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                <Truck className="h-4 w-4 mr-1" />
-                <span>Available</span>
-              </div>
-            </div>
-          </div>
+          {cardContent}
         </motion.div>
       );
     }
   };
 
   return (
-    <section className="py-12 bg-white dark:bg-gray-900">
+    <section className="py-12 md:py-16 bg-white dark:bg-gray-900">
       <div className="container mx-auto px-4">
         {/* Search and Filter Controls */}
-        <div className="mb-10 flex flex-col lg:flex-row gap-4 items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
+        <div className="mb-8 flex flex-col lg:flex-row gap-3 items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl">
           {/* Search */}
           <div className="relative w-full md:w-96">
             <input
@@ -367,11 +319,10 @@ export function Products() {
           </div>
         </div>
         
-        {/* Display any error that occurred */}
         {error && <ErrorMessage />}
         
         {/* Categories */}
-        <div className="flex flex-wrap justify-center gap-4 mb-10">
+        <div className="flex flex-wrap justify-center gap-3 mb-8">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -401,10 +352,11 @@ export function Products() {
           ))}
         </div>
 
-        {/* Results Count and Sort Info */}
+        {/* Results Count */}
         <div className="flex justify-between items-center mb-6">
           <p className="text-gray-600 dark:text-gray-300">
-            Showing <span className="font-semibold">{sortedProducts.length}</span> products
+            Showing <span className="font-semibold">{Math.min(displayLimit, sortedProducts.length)}</span> 
+            {displayLimit < sortedProducts.length ? ` of ${sortedProducts.length}` : ''} products
             {selectedCategory !== "all" && (
               <span> in <span className="font-semibold">{selectedCategory}</span></span>
             )}
@@ -415,42 +367,24 @@ export function Products() {
         </div>
 
         {/* Products Grid/List */}
-        <AnimatePresence>
-          <motion.div
-            layout
-            className={isGridView 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" 
-              : "flex flex-col gap-6"
-            }
-          >
-            {isLoading ? (
-              // Skeleton loaders during loading
-              Array.from({ length: 6 }).map((_, index) => (
-                <ProductSkeleton key={index} />
-              ))
-            ) : sortedProducts.length > 0 ? (
-              sortedProducts.map((product) => renderProductCard(product))
-            ) : (
-              // No results found
-              <div className="col-span-3 py-16 text-center">
-                <Info className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No products found</h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Try adjusting your search or filter to find what you're looking for.
-                </p>
-                <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSelectedCategory("all");
-                  }}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Reset Filters
-                </button>
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
+        <div className={`grid ${isGridView ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} gap-6 mb-8`}>
+          {sortedProducts.slice(0, displayLimit).map((product) => renderProductCard(product))}
+        </div>
+
+        {/* Load More Button */}
+        {displayLimit < sortedProducts.length && (
+          <div className="flex justify-center mt-8">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setDisplayLimit(prev => prev + 6)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center"
+            >
+              Load More Products
+              <ChevronRight className="ml-2 h-5 w-5" />
+            </motion.button>
+          </div>
+        )}
       </div>
 
       {/* Enhanced Product Modal */}
@@ -460,7 +394,7 @@ export function Products() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto"
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-3 overflow-y-auto"
             onClick={() => setSelectedProduct(null)}
           >
             <motion.div 
@@ -472,7 +406,7 @@ export function Products() {
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
                 {/* Left: Image Gallery */}
-                <div className="relative bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center p-8">
+                <div className="relative bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center p-6">
                   <div className="absolute top-4 left-4 z-10">
                     <button 
                       onClick={() => setSelectedProduct(null)}
@@ -562,7 +496,7 @@ export function Products() {
                 </div>
                 
                 {/* Right: Product Details */}
-                <div className="p-8">
+                <div className="p-6">
                   <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-medium mb-3">
                     {selectedProduct.category}
                   </span>
@@ -570,7 +504,7 @@ export function Products() {
                     {selectedProduct.name}
                   </h2>
                   
-                  <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                  <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                     <div className="flex items-center text-blue-700 dark:text-blue-300 mb-1">
                       <Info className="h-4 w-4 mr-2" />
                       <span className="text-sm font-medium">Product Information</span>
@@ -580,15 +514,15 @@ export function Products() {
                     </p>
                   </div>
                   
-                  <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                  <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
                     {selectedProduct.description}
                   </p>
                   
                   {/* Product Features */}
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Specifications</h3>
-                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
-                      <ul className="space-y-3">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Specifications</h3>
+                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
+                      <ul className="space-y-2">
                         {selectedProduct.specs.map((spec, index) => (
                           <li key={index} className="flex items-start">
                             <div className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mt-0.5 mr-3">
@@ -602,9 +536,9 @@ export function Products() {
                   </div>
               
                   {/* Product Use Cases */}
-                  <div className="mb-8">
-                    <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Use Cases</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Use Cases</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {selectedProduct.useCases.map((useCase, index) => (
                         <div 
                           key={index} 
@@ -618,24 +552,36 @@ export function Products() {
                   </div>
                   
                   {/* Action Buttons */}
-                  <div className="flex flex-wrap gap-3">
-                    <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition duration-300 flex items-center justify-center">
+                  <div className="flex flex-wrap gap-2">
+                    <button 
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition duration-300 flex items-center justify-center"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowContactModal(true);
+                      }}
+                    >
                       <Phone className="h-5 w-5 mr-2" />
                       Request Quote
                     </button>
-                    <button className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-3 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-300 flex items-center justify-center">
-                      <Download className="h-5 w-5 mr-2" />
-                      Download Specs
-                    </button>
+                    {selectedProduct.document && (
+                      <a 
+                        href={selectedProduct.document} 
+                        download={`${selectedProduct.name.replace(/\s+/g, '-').toLowerCase()}-specs.pdf`}
+                        className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-3 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-300 flex items-center justify-center"
+                      >
+                        <Download className="h-5 w-5 mr-2" />
+                        Download Specs
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
               
               {/* Related Products */}
               {relatedProducts.length > 0 && (
-                <div className="border-t border-gray-200 dark:border-gray-700 p-8">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Related Products</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="border-t border-gray-200 dark:border-gray-700 p-6">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Related Products</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {relatedProducts.map((product) => (
                       <div 
                         key={product.id}
@@ -671,6 +617,39 @@ export function Products() {
                   </div>
                 </div>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Contact Form Modal */}
+      <AnimatePresence>
+        {showContactModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-3 overflow-y-auto"
+            onClick={() => setShowContactModal(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Contact 
+                isModal={true}
+                modalTitle="Request a Quote"
+                initialValues={{
+                  name: '',
+                  email: '',
+                  subject: selectedProduct ? `Quote request for ${selectedProduct.name}` : 'Product inquiry',
+                  message: ''
+                }}
+                onClose={() => setShowContactModal(false)}
+              />
             </motion.div>
           </motion.div>
         )}

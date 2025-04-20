@@ -1,6 +1,6 @@
-import React from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Package2, BarChart3, Users, ArrowRight, Download } from 'lucide-react';
+import { ShieldCheck, Package2, BarChart3, Users, ArrowRight, Download, AlertCircle } from 'lucide-react';
 import { Products as ProductsComponent } from '../components/Products';
 
 // Stats shown above the product listing
@@ -44,6 +44,50 @@ const testimonials = [
 ];
 
 export function Products() {
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  const handleDownloadCatalog = async () => {
+    try {
+      setDownloadError(null);
+      
+      // Add a timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/catalog/download?t=${timestamp}`);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to download catalog');
+      }
+
+      // Create a blob from the response
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      // Get filename from the Content-Disposition header if available
+      let filename = 'catalog.pdf';
+      const contentDisposition = response.headers.get('Content-Disposition');
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading catalog:', error);
+      setDownloadError(error instanceof Error ? error.message : 'Failed to download catalog');
+      setTimeout(() => setDownloadError(null), 5000);
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-gray-900 min-h-screen pt-20">
       {/* Hero Section */}
@@ -81,12 +125,19 @@ export function Products() {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={handleDownloadCatalog}
                 className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 px-6 py-3 rounded-lg font-medium flex items-center"
               >
                 Download Catalog
                 <Download className="ml-2 h-5 w-5" />
               </motion.button>
             </div>
+            {downloadError && (
+              <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 flex items-start">
+                <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                <p>{downloadError}</p>
+              </div>
+            )}
           </motion.div>
         </div>
       </section>

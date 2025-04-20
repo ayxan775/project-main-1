@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, Tag, Key, LogOut, Database } from 'lucide-react';
+import { Package, Tag, Key, LogOut, Database, Upload } from 'lucide-react';
 import { AdminSection } from '../types';
 
 interface AdminSidePanelProps {
@@ -12,6 +12,7 @@ export function AdminSidePanel({ activeSection, onSectionChange, onLogout }: Adm
   const sections: AdminSection[] = [
     { id: 'products', name: 'Products', icon: <Package className="w-5 h-5" /> },
     { id: 'categories', name: 'Categories', icon: <Tag className="w-5 h-5" /> },
+    { id: 'catalog', name: 'Catalog', icon: <Upload className="w-5 h-5" /> },
     { id: 'backup', name: 'Backup & Restore', icon: <Database className="w-5 h-5" /> },
     { id: 'password', name: 'Change Password', icon: <Key className="w-5 h-5" /> }
   ];
