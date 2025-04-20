@@ -1,47 +1,93 @@
-# AzPort Supply Website
+# Admin Dashboard for Product Management
 
-## Static Assets & Images
+This application provides an admin dashboard to manage products using SQLite for data storage. The admin dashboard allows authenticated users to create, read, update, and delete products.
 
-### Image Handling
+## Features
 
-All static assets such as images should be placed in the `public/images/` directory. 
+- Secure login with JWT authentication
+- Product management (CRUD operations)
+- Change admin password
+- Responsive UI for all devices
+- Dark/light mode support
 
-When referencing these images in your code, use the path format `/images/filename.png` (starting with a forward slash).
+## Default Credentials
 
-Example:
-```jsx
-<img src="/images/logo.png" alt="Logo" />
+- **Username:** admin
+- **Password:** Azerbaycan123
+
+## Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+
+## Setup Instructions
+
+1. Clone the repository
+2. Install dependencies:
+
+```bash
+npm install
+# Run setup script to create necessary directories
+npm run setup
 ```
 
-For background images in CSS:
-```jsx
-<div style={{ backgroundImage: 'url("/images/background.webp")' }}></div>
-```
-
-### Why This Works
-
-Vite treats the `public` directory as a static asset directory. During development, files inside this directory are served as-is at the root path. During production build, assets in the `public` directory are copied to the build output directory untouched.
-
-### Image Deployment Notes
-
-- Local image paths like `/src/img/logo.png` will not work in production builds
-- Always use `/images/...` paths that reference the public directory
-- For dynamic images or user-uploaded content, consider using a CDN or external image hosting service
-
-## Development
-
-To run the development server:
+3. Run the development server:
 
 ```bash
 npm run dev
 ```
 
-## Build
+4. Access the admin dashboard:
+   - Navigate to http://localhost:3000/admin
+   - The database will be automatically initialized on the first API request
 
-To create a production build:
+## Important Note on Database Initialization
+
+The SQLite database will be initialized when:
+- You first log in to the admin dashboard
+- You access the products page
+- You directly call the API endpoints
+
+If you want to manually initialize the database, you can make a GET request to:
+```
+/api/init-db
+```
+
+## Project Structure
+
+- `/pages` - Next.js pages including admin dashboard
+- `/pages/api` - API endpoints for authentication and product management
+- `/src/components` - React components
+- `/src/lib` - Database utilities
+- `/src/data` - Initial product data
+
+## Database
+
+The application uses SQLite for data storage. The database file `data.db` will be created automatically when the application starts.
+
+## API Endpoints
+
+- `/api/auth` - Authentication endpoint
+- `/api/products` - Product management endpoint (CRUD)
+- `/api/user` - User management endpoint (change password)
+- `/api/init-db` - Database initialization endpoint
+
+## Production Deployment
+
+1. Build the application:
 
 ```bash
 npm run build
 ```
 
-The build output will be in the `dist` directory, ready for deployment. 
+2. Start the production server:
+
+```bash
+npm start
+```
+
+Or, to use the custom server:
+
+```bash
+npm run serve
+``` 

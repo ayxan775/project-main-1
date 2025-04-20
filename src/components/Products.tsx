@@ -3,9 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronRight, X, Search, Grid, List, SlidersHorizontal, 
   Download, Share2, ChevronLeft, 
-  Heart, Info, Truck, Shield, ArrowRight, FileText, Phone
+  Heart, Info, Truck, Shield, ArrowRight, FileText, Phone, AlertTriangle
 } from 'lucide-react';
-import { products, categories } from '../data/products';
 import { Product } from '../types';
 
 export function Products() {
@@ -18,6 +17,38 @@ export function Products() {
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [isFavorite, setIsFavorite] = useState<Record<number, boolean>>({});
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('/api/products');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        setProducts(data);
+        
+        // Extract unique categories
+        const uniqueCategories = Array.from(new Set(data.map((product: Product) => product.category))) as string[];
+        setCategories(uniqueCategories);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setError(error instanceof Error ? error.message : 'Failed to fetch products');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchProducts();
+  }, []);
 
   // Filter products based on category and search query
   const filteredProducts = products
@@ -44,14 +75,6 @@ export function Products() {
     }
   });
 
-  // Simulate loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
   // Set related products when a product is selected
   useEffect(() => {
     if (selectedProduct) {
@@ -62,7 +85,7 @@ export function Products() {
       setRelatedProducts(related);
       setCurrentImageIndex(0);
     }
-  }, [selectedProduct]);
+  }, [selectedProduct, products]);
 
   // Toggle favorite status
   const toggleFavorite = (id: number, event: React.MouseEvent) => {
@@ -72,6 +95,55 @@ export function Products() {
       [id]: !prev[id]
     }));
   };
+
+  // Get cover image
+  const getCoverImage = (product: Product): string => {
+    return product.image || (product.images && product.images.length > 0 ? product.images[0] : '');
+  };
+
+  // Get interior images (excluding cover)
+  const getInteriorImages = (product: Product): string[] => {
+    if (!product.images || product.images.length === 0) {
+      return [];
+    }
+    return product.images;
+  };
+
+  // Helper to safely get current image
+  const getCurrentImage = (): string => {
+    if (!selectedProduct) return '';
+    
+    const interiorImages = getInteriorImages(selectedProduct);
+    if (interiorImages.length === 0) {
+      return getCoverImage(selectedProduct);
+    }
+    
+    if (currentImageIndex >= interiorImages.length) {
+      setCurrentImageIndex(0);
+      return interiorImages[0];
+    }
+    
+    return interiorImages[currentImageIndex];
+  };
+
+  // Error message component
+  const ErrorMessage = () => (
+    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+      <div className="flex items-start">
+        <AlertTriangle className="h-5 w-5 text-red-500 mr-3 mt-0.5" />
+        <div>
+          <h4 className="text-sm font-medium text-red-800 dark:text-red-300">Error loading products</h4>
+          <p className="text-sm text-red-700 dark:text-red-400 mt-1">{error}</p>
+          <button 
+            className="mt-2 text-sm font-medium text-red-600 dark:text-red-300 hover:text-red-800 dark:hover:text-red-200"
+            onClick={() => window.location.reload()}
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   // Skeleton loader for products
   const ProductSkeleton = () => (
@@ -87,19 +159,33 @@ export function Products() {
   );
 
   const renderProductCard = (product: Product) => {
+    const coverImage = getCoverImage(product);
+    const hasMultipleImages = getInteriorImages(product).length > 0;
+    
     const cardContent = (
       <>
         <div className="relative overflow-hidden group">
-          <img 
-            src={product.image} 
-            alt={product.name}
-            className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-110"
-          />
+          {coverImage ? (
+            <img 
+              src={coverImage} 
+              alt={product.name}
+              className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+          ) : (
+            <div className="w-full h-64 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+              <FileText className="h-12 w-12 text-gray-400" />
+            </div>
+          )}
           <div className="absolute top-0 left-0 right-0 bottom-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="absolute top-4 right-4 flex flex-col space-y-2">
             <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm shadow-md">
               {product.category}
             </span>
+            {hasMultipleImages && (
+              <span className="bg-gray-800/70 text-white px-3 py-1 rounded-full text-xs shadow-md">
+                {getInteriorImages(product).length} photos
+              </span>
+            )}
           </div>
           <button 
             onClick={(e) => toggleFavorite(product.id, e)}
@@ -162,16 +248,29 @@ export function Products() {
         >
           <div className="md:w-1/3">
             <div className="relative h-full">
-              <img 
-                src={product.image} 
-                alt={product.name}
-                className="w-full h-64 md:h-full object-cover"
-              />
+              {coverImage ? (
+                <img 
+                  src={coverImage} 
+                  alt={product.name}
+                  className="w-full h-64 md:h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-64 md:h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                  <FileText className="h-12 w-12 text-gray-400" />
+                </div>
+              )}
               <div className="absolute top-4 right-4">
                 <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm shadow-md">
                   {product.category}
                 </span>
               </div>
+              {hasMultipleImages && (
+                <div className="absolute top-14 right-4">
+                  <span className="bg-gray-800/70 text-white px-3 py-1 rounded-full text-xs shadow-md">
+                    {getInteriorImages(product).length} photos
+                  </span>
+                </div>
+              )}
               <button 
                 onClick={(e) => toggleFavorite(product.id, e)}
                 className="absolute top-4 left-4 bg-white/80 dark:bg-gray-800/80 p-2 rounded-full shadow-md"
@@ -267,6 +366,9 @@ export function Products() {
             </div>
           </div>
         </div>
+        
+        {/* Display any error that occurred */}
+        {error && <ErrorMessage />}
         
         {/* Categories */}
         <div className="flex flex-wrap justify-center gap-4 mb-10">
@@ -372,57 +474,91 @@ export function Products() {
                 {/* Left: Image Gallery */}
                 <div className="relative bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center p-8">
                   <div className="absolute top-4 left-4 z-10">
-                <button 
-                  onClick={() => setSelectedProduct(null)}
+                    <button 
+                      onClick={() => setSelectedProduct(null)}
                       className="bg-white/80 dark:bg-gray-800/80 p-2 rounded-full text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
+                    >
                       <X className="h-5 w-5" />
-                </button>
-              </div>
-                  
-                  {/* Primary Image */}
-              <img 
-                src={selectedProduct.image} 
-                alt={selectedProduct.name}
-                    className="w-full h-auto max-h-[400px] object-contain rounded-lg"
-                  />
-                  
-                  {/* Image Navigation (Simulated multiple images) */}
-                  <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-                    <div className="flex space-x-3 px-4 py-2 bg-white/80 dark:bg-gray-800/80 rounded-full">
-                      {[0, 1, 2].map((index) => (
-                        <button 
-                          key={index}
-                          onClick={() => setCurrentImageIndex(index)}
-                          className={`w-3 h-3 rounded-full transition-all ${
-                            currentImageIndex === index 
-                              ? 'bg-blue-600 scale-110' 
-                              : 'bg-gray-300 dark:bg-gray-600'
-                          }`}
-                        ></button>
-                      ))}
-                    </div>
+                    </button>
                   </div>
                   
-                  {/* Previous/Next Buttons (Simulated as we have only one real image) */}
-                  <button 
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-gray-800/80 p-2 rounded-full text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCurrentImageIndex(prev => (prev === 0 ? 2 : prev - 1));
-                    }}
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                  <button 
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-gray-800/80 p-2 rounded-full text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCurrentImageIndex(prev => (prev === 2 ? 0 : prev + 1));
-                    }}
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
+                  {/* Primary Image */}
+                  {getCurrentImage() ? (
+                    <img 
+                      src={getCurrentImage()}
+                      alt={selectedProduct.name}
+                      className="w-full h-auto max-h-[400px] object-contain rounded-lg"
+                    />
+                  ) : (
+                    <div className="w-full h-[400px] bg-gray-200 dark:bg-gray-700 flex items-center justify-center rounded-lg">
+                      <FileText className="h-16 w-16 text-gray-400" />
+                    </div>
+                  )}
+                  
+                  {/* Image Gallery Navigation */}
+                  {(() => {
+                    const interiorImages = getInteriorImages(selectedProduct);
+                    if (interiorImages.length > 0) {
+                      return (
+                        <>
+                          {/* Image Thumbnails */}
+                          <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+                            <div className="flex space-x-2 px-4 py-2 bg-white/80 dark:bg-gray-800/80 rounded-lg">
+                              {interiorImages.map((img, index) => (
+                                <button 
+                                  key={index}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentImageIndex(index);
+                                  }}
+                                  className={`w-12 h-12 rounded-md overflow-hidden border-2 transition-all ${
+                                    currentImageIndex === index 
+                                      ? 'border-blue-600 opacity-100' 
+                                      : 'border-transparent opacity-60 hover:opacity-100'
+                                  }`}
+                                >
+                                  <img 
+                                    src={img} 
+                                    alt={`${selectedProduct.name} - ${index + 1}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Navigation Arrows */}
+                          {interiorImages.length > 1 && (
+                            <>
+                              <button 
+                                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-gray-800/80 p-2 rounded-full text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCurrentImageIndex(prev => 
+                                    prev === 0 ? interiorImages.length - 1 : prev - 1
+                                  );
+                                }}
+                              >
+                                <ChevronLeft className="h-5 w-5" />
+                              </button>
+                              <button 
+                                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-gray-800/80 p-2 rounded-full text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCurrentImageIndex(prev => 
+                                    prev === interiorImages.length - 1 ? 0 : prev + 1
+                                  );
+                                }}
+                              >
+                                <ChevronRight className="h-5 w-5" />
+                              </button>
+                            </>
+                          )}
+                        </>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
                 
                 {/* Right: Product Details */}
@@ -449,27 +585,27 @@ export function Products() {
                   </p>
                   
                   {/* Product Features */}
-              <div className="mb-6">
+                  <div className="mb-6">
                     <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Specifications</h3>
                     <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
                       <ul className="space-y-3">
-                  {selectedProduct.specs.map((spec, index) => (
+                        {selectedProduct.specs.map((spec, index) => (
                           <li key={index} className="flex items-start">
                             <div className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mt-0.5 mr-3">
                               <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></div>
                             </div>
                             <span className="text-gray-700 dark:text-gray-300">{spec}</span>
                           </li>
-                  ))}
-                </ul>
+                        ))}
+                      </ul>
                     </div>
-              </div>
+                  </div>
               
                   {/* Product Use Cases */}
                   <div className="mb-8">
                     <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Use Cases</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {selectedProduct.useCases.map((useCase, index) => (
+                      {selectedProduct.useCases.map((useCase, index) => (
                         <div 
                           key={index} 
                           className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg flex items-center"
@@ -510,11 +646,17 @@ export function Products() {
                         }}
                       >
                         <div className="w-1/3">
-                          <img 
-                            src={product.image} 
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
+                          {getCoverImage(product) ? (
+                            <img 
+                              src={getCoverImage(product)} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                              <FileText className="h-5 w-5 text-gray-400" />
+                            </div>
+                          )}
                         </div>
                         <div className="w-2/3 p-4">
                           <h4 className="font-semibold text-gray-900 dark:text-white mb-1 line-clamp-1">{product.name}</h4>
@@ -522,9 +664,9 @@ export function Products() {
                           <div className="flex items-center text-blue-600 dark:text-blue-400 text-sm font-medium">
                             View Details
                             <ArrowRight className="ml-1 h-3 w-3" />
-            </div>
-          </div>
-        </div>
+                          </div>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

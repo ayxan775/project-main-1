@@ -2,8 +2,11 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/": "pages/index.js",
-  "/about": "pages/about.js",
+  "/admin": "pages/admin.js",
   "/products": "pages/products.js",
-  "/404": "pages/404.js"
+  "/": "pages/index.js",
+  "/404": "pages/404.js",
+  "/api/products": "pages/api/products.js",
+  "/api/auth/verify": "pages/api/auth/verify.js",
+  "/api/categories": "pages/api/categories.js"
 }
