@@ -86,7 +86,7 @@ export function SafetyStandards() {
   );
 
   return (
-    <section className="pt-2 bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
+    <section className="py-12 bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
       <div className="container mx-auto px-4 relative">
         {/* Decorative elements */}
         <div className="absolute top-40 right-20 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl"></div>

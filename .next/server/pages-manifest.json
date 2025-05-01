@@ -3,11 +3,8 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
+  "/contact": "pages/contact.js",
   "/admin": "pages/admin.js",
-  "/api/products": "pages/api/products.js",
-  "/distribution": "pages/distribution.js",
-  "/certifications": "pages/certifications.js",
-  "/career": "pages/career.js",
   "/api/job-openings": "pages/api/job-openings.js",
-  "/about": "pages/about.js"
+  "/api/categories": "pages/api/categories.js"
 }
