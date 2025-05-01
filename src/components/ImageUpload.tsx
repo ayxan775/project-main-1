@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, Image as ImageIcon, AlertTriangle } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, AlertTriangle, AlertCircle } from 'lucide-react';
 
 interface ImageUploadProps {
   coverImage: string;
@@ -19,6 +19,59 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [error, setError] = React.useState<string | null>(null);
 
+  const validateImage = async (url: string, isCover: boolean = false) => {
+    try {
+      const img = new Image();
+      img.src = url;
+      
+      return new Promise((resolve, reject) => {
+        img.onload = () => {
+          // For cover images
+          if (isCover) {
+            // Recommended dimensions: 800x600 to 1200x900 (4:3 ratio)
+            if (img.width < 800 || img.height < 600) {
+              reject('Cover image is too small. Minimum size is 800x600 pixels.');
+            } else if (img.width > 1200 || img.height > 900) {
+              reject('Cover image is too large. Maximum size is 1200x900 pixels.');
+            } else if (Math.abs(img.width / img.height - 4/3) > 0.1) {
+              reject('Cover image should have a 4:3 aspect ratio (e.g., 800x600, 1200x900).');
+            }
+          }
+          // For interior images
+          else {
+            if (img.width < 600 || img.height < 400) {
+              reject('Interior image is too small. Minimum size is 600x400 pixels.');
+            }
+          }
+          resolve(true);
+        };
+        img.onerror = () => reject('Failed to load image. Please check the URL.');
+      });
+    } catch (error) {
+      throw new Error('Invalid image URL');
+    }
+  };
+
+  const handleCoverImageChange = async (url: string) => {
+    try {
+      setError(null);
+      await validateImage(url, true);
+      onCoverImageChange(url);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : String(error));
+    }
+  };
+
+  const handleInteriorImageChange = async (url: string) => {
+    try {
+      setError(null);
+      await validateImage(url);
+      onInteriorImagesChange([...interiorImages, url]);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : String(error));
+    }
+  };
+
   const onDropCover = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
     handleRejectedFiles(rejectedFiles);
     
@@ -33,15 +86,14 @@ export function ImageUpload({
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target?.result) {
-        onCoverImageChange(e.target.result as string);
-        setError(null);
+        handleCoverImageChange(e.target.result as string);
       }
     };
     reader.onerror = () => {
       setError("Failed to read file. Please try again.");
     };
     reader.readAsDataURL(file);
-  }, [onCoverImageChange, maxSize]);
+  }, [onCoverImageChange, maxSize, handleCoverImageChange]);
 
   const onDropInterior = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
     handleRejectedFiles(rejectedFiles);
@@ -57,8 +109,7 @@ export function ImageUpload({
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
-          onInteriorImagesChange([...interiorImages, e.target.result as string]);
-          setError(null);
+          handleInteriorImageChange(e.target.result as string);
         }
       };
       reader.onerror = () => {
@@ -66,7 +117,7 @@ export function ImageUpload({
       };
       reader.readAsDataURL(file);
     });
-  }, [interiorImages, onInteriorImagesChange, maxSize]);
+  }, [interiorImages, onInteriorImagesChange, maxSize, handleInteriorImageChange]);
 
   const handleRejectedFiles = (rejectedFiles: any[]) => {
     if (rejectedFiles.length > 0) {
@@ -133,7 +184,7 @@ export function ImageUpload({
       {error && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 shadow-sm">
           <div className="flex items-start">
-            <AlertTriangle className="h-5 w-5 text-red-500 dark:text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+            <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400 mr-2 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
             </div>

@@ -39,6 +39,14 @@ const verifyToken = (req: NextApiRequest): Promise<any> => {
   });
 };
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb'
+    }
+  }
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Set proper JSON content type
   res.setHeader('Content-Type', 'application/json');

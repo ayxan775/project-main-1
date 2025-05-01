@@ -272,6 +272,15 @@ export default function AdminPage() {
   // Handle form input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
+    // Add validation for image URLs
+    if (name === 'image' || (name === 'images' && typeof value === 'string')) {
+      // Show warning if URL is too long
+      if (value.length > 1000) {
+        alert('Warning: Very long image URLs may cause issues. Consider using a shorter URL or optimizing the image.');
+      }
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   

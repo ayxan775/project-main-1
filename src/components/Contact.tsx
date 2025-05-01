@@ -478,7 +478,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
               <iframe 
                 className="w-full h-full border-0 filter grayscale-[50%] contrast-[1.2] opacity-90"
                 title="AzPort Supply Location"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d48602.55900720524!2d49.8035548!3d40.3703125!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40307d7a76a9b7b7%3A0x9e774fe73c9c9df7!2sBaku%2C%20Azerbaijan!5e0!3m2!1sen!2sus!4v1682600000000!5m2!1sen!2sus" 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3037.6990456824287!2d49.85643977653901!3d40.41478637144418!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40307d1f08d751e5%3A0x682d37b49a753e5a!2sAzport%20Supply%20MMC!5e0!3m2!1sen!2saz!4v1710425567159!5m2!1sen!2saz" 
                 allowFullScreen 
                 loading="lazy" 
                 referrerPolicy="no-referrer-when-downgrade">
@@ -491,7 +491,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 <div className="flex items-center">
                   <Map className="h-5 w-5 text-blue-600 mr-2" />
                   <a 
-                    href="https://goo.gl/maps/5JrCjUGbV8v9JKPG6" 
+                    href="https://www.google.com/maps/place/Azport+Supply+MMC/@40.4147864,49.8564398,17z/data=!3m1!4b1!4m6!3m5!1s0x40307d1f08d751e5:0x682d37b49a753e5a!8m2!3d40.4147823!4d49.8590147!16s%2Fg%2F11lp0z4mdk" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-blue-600 font-medium hover:underline"

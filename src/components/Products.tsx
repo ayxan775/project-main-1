@@ -549,37 +549,41 @@ export function Products() {
                   </p>
                   
                   {/* Product Features */}
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Specifications</h3>
-                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
-                      <ul className="space-y-2">
-                        {selectedProduct.specs.map((spec, index) => (
-                          <li key={index} className="flex items-start">
-                            <div className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mt-0.5 mr-3">
-                              <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></div>
-                            </div>
-                            <span className="text-gray-700 dark:text-gray-300">{spec}</span>
-                          </li>
-                        ))}
-                      </ul>
+                  {selectedProduct.specs && selectedProduct.specs.length > 0 && (
+                    <div className="mb-4">
+                      <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Products</h3>
+                      <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
+                        <ul className="space-y-2">
+                          {selectedProduct.specs.map((spec, index) => (
+                            <li key={index} className="flex items-start">
+                              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mt-0.5 mr-3">
+                                <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></div>
+                              </div>
+                              <span className="text-gray-700 dark:text-gray-300">{spec}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                  </div>
+                  )}
               
                   {/* Product Use Cases */}
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Use Cases</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {selectedProduct.useCases.map((useCase, index) => (
-                        <div 
-                          key={index} 
-                          className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg flex items-center"
-                        >
-                          <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2" />
-                          <span className="text-gray-700 dark:text-gray-300 text-sm">{useCase}</span>
-                        </div>
-                      ))}
+                  {selectedProduct.useCases && selectedProduct.useCases.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Use Cases</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {selectedProduct.useCases.map((useCase, index) => (
+                          <div 
+                            key={index} 
+                            className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg flex items-center"
+                          >
+                            <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2" />
+                            <span className="text-gray-700 dark:text-gray-300 text-sm">{useCase}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                   
                   {/* Action Buttons */}
                   <div className="flex flex-wrap gap-2">
