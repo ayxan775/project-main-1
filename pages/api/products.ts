@@ -139,6 +139,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       
       const db = await getDB();
+      
+      // Validate that the category exists if one is provided
+      if (category) {
+        const categoryExists = await db.get('SELECT 1 FROM categories WHERE name = ?', [category]);
+        if (!categoryExists) {
+          return res.status(400).json({ message: 'Selected category does not exist' });
+        }
+      }
+      
       await db.run(
         'UPDATE products SET name = ?, description = ?, image = ?, specs = ?, useCases = ?, category = ?, images = ?, document = ? WHERE id = ?',
         [

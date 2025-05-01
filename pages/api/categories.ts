@@ -101,14 +101,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         [category.name]
       );
 
+      // If the reassign parameter is provided, move products to that category
+      const reassignTo = req.query.reassignTo as string;
+      
       if (productsUsingCategory.count > 0) {
-        return res.status(400).json({ 
-          message: 'Cannot delete category that is being used by products'
-        });
+        if (reassignTo) {
+          // Check if the target category exists
+          const targetCategory = await db.get('SELECT * FROM categories WHERE name = ?', [reassignTo]);
+          if (!targetCategory) {
+            return res.status(400).json({ message: 'Target category for reassignment not found' });
+          }
+          
+          // Reassign products to the new category
+          await db.run(
+            'UPDATE products SET category = ? WHERE category = ?',
+            [reassignTo, category.name]
+          );
+        } else {
+          // If no reassignment category is provided, prevent deletion
+          return res.status(400).json({ 
+            message: 'Cannot delete category that is being used by products',
+            productsCount: productsUsingCategory.count,
+            canReassign: true
+          });
+        }
       }
 
       await db.run('DELETE FROM categories WHERE id = ?', [req.query.id]);
-      return res.status(200).json({ message: 'Category deleted successfully' });
+      return res.status(200).json({ 
+        message: 'Category deleted successfully',
+        reassigned: reassignTo ? productsUsingCategory.count : 0
+      });
     }
 
     // Handle unsupported methods

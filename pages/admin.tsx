@@ -36,6 +36,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
+  const [categoryLastUpdated, setCategoryLastUpdated] = useState<number>(Date.now());
   const [saveError, setSaveError] = useState<string | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   
@@ -96,12 +97,19 @@ export default function AdminPage() {
     }
   }, []);
   
-  // Effect to fetch categories when logging in
+  // Effect to fetch categories when logging in or when categories are updated
   useEffect(() => {
     if (isLoggedIn) {
       fetchCategories();
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, categoryLastUpdated]);
+  
+  // Effect to refresh products when categories change
+  useEffect(() => {
+    if (isLoggedIn && categoryLastUpdated) {
+      fetchProducts();
+    }
+  }, [isLoggedIn, categoryLastUpdated]);
   
   // Get catalog status for backup info
   useEffect(() => {
@@ -121,6 +129,13 @@ export default function AdminPage() {
       checkCatalog();
     }
   }, [isLoggedIn, activeSection]);
+  
+  // Effect to refresh data when categories are updated
+  useEffect(() => {
+    if (isLoggedIn && categoryLastUpdated) {
+      refreshData();
+    }
+  }, [isLoggedIn, categoryLastUpdated]);
   
   // Handle login form submission
   const handleLogin = async (e: React.FormEvent) => {
@@ -317,23 +332,27 @@ export default function AdminPage() {
   
   // Edit a product
   const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    setSaveError(null);
-    
-    // Ensure we have valid arrays for images
-    const interiorImages = product.images || [];
+    // First check if the product's category still exists
+    const categoryStillExists = categories.includes(product.category);
     
     setFormData({
       name: product.name,
       description: product.description,
-      image: product.image || '', // Cover image
-      category: product.category,
-      specs: [...product.specs],
-      useCases: [...product.useCases],
-      images: interiorImages, // Interior images
+      image: product.image,
+      category: categoryStillExists ? product.category : '',
+      specs: product.specs || [],
+      useCases: product.useCases || [],
+      images: product.images || [],
       document: product.document || ''
     });
     
+    if (!categoryStillExists) {
+      setSaveError(`Warning: This product was assigned to category "${product.category}" which no longer exists. Please select a new category.`);
+    } else {
+      setSaveError(null);
+    }
+    
+    setEditingProduct(product);
     setShowProductModal(true);
   };
   
@@ -684,6 +703,12 @@ export default function AdminPage() {
     }
   };
   
+  // Refresh categories and products together to ensure consistency
+  const refreshData = async () => {
+    await fetchCategories();
+    await fetchProducts();
+  };
+  
   // Render content based on active section
   const renderContent = () => {
     if (!isLoggedIn) {
@@ -931,7 +956,7 @@ export default function AdminPage() {
           </div>
         );
       case 'categories':
-        return <CategoryManager token={token} />;
+        return <CategoryManager token={token} onCategoryChange={() => setCategoryLastUpdated(Date.now())} />;
       case 'catalog':
         return <CatalogManager />;
       case 'careers':

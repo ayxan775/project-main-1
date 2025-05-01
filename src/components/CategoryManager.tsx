@@ -4,9 +4,10 @@ import { Category } from '../types';
 
 interface CategoryManagerProps {
   token: string;
+  onCategoryChange?: () => void;
 }
 
-export function CategoryManager({ token }: CategoryManagerProps) {
+export function CategoryManager({ token, onCategoryChange }: CategoryManagerProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -95,6 +96,11 @@ export function CategoryManager({ token }: CategoryManagerProps) {
       // Refresh category list and reset form
       await fetchCategories();
       handleCancelEdit();
+      
+      // Notify parent component that categories have changed
+      if (onCategoryChange) {
+        onCategoryChange();
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to save category');
     }
@@ -114,12 +120,80 @@ export function CategoryManager({ token }: CategoryManagerProps) {
         }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete category');
+      if (response.ok) {
+        await fetchCategories();
+        
+        // Notify parent component that categories have changed
+        if (onCategoryChange) {
+          onCategoryChange();
+        }
+        return;
       }
 
-      await fetchCategories();
+      // Handle the case where a category can't be deleted due to products using it
+      const errorData = await response.json();
+      
+      if (errorData.canReassign && errorData.productsCount > 0) {
+        const categoryToDelete = categories.find(cat => cat.id === id);
+        const otherCategories = categories.filter(cat => cat.id !== id);
+        
+        if (otherCategories.length === 0) {
+          alert('Cannot delete this category because it contains products and there are no other categories to move them to.');
+          return;
+        }
+        
+        // Ask user which category to reassign products to
+        const reassign = confirm(
+          `This category contains ${errorData.productsCount} products. Would you like to reassign them to another category?`
+        );
+        
+        if (reassign) {
+          // Create a dropdown for selecting the target category
+          const selectTarget = document.createElement('select');
+          selectTarget.innerHTML = otherCategories.map(cat => 
+            `<option value="${cat.name}">${cat.name}</option>`
+          ).join('');
+          
+          const container = document.createElement('div');
+          container.innerHTML = `
+            <p>Select a category to move ${errorData.productsCount} products from "${categoryToDelete?.name}":</p>
+          `;
+          container.appendChild(selectTarget);
+          
+          // Use a custom dialog or modal in your app
+          const targetCategory = prompt(
+            `Select a category to move ${errorData.productsCount} products to:`,
+            otherCategories[0].name
+          );
+          
+          if (targetCategory && otherCategories.some(cat => cat.name === targetCategory)) {
+            // Call the API with the reassignment option
+            const reassignResponse = await fetch(`/api/categories?id=${id}&reassignTo=${encodeURIComponent(targetCategory)}`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            if (reassignResponse.ok) {
+              const result = await reassignResponse.json();
+              alert(`Category deleted successfully. ${result.reassigned} products were moved to "${targetCategory}".`);
+              await fetchCategories();
+              
+              // Notify parent component that categories have changed
+              if (onCategoryChange) {
+                onCategoryChange();
+              }
+            } else {
+              const reassignError = await reassignResponse.json();
+              setError(reassignError.message || 'Failed to reassign products and delete category');
+            }
+          }
+        }
+        return;
+      }
+      
+      throw new Error(errorData.message || 'Failed to delete category');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to delete category');
     }
