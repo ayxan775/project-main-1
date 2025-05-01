@@ -1,11 +1,21 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
 import { getDB, initializeDB } from '../../src/lib/db';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// Initialize DB flag
-let dbInitialized = false;
+// More reliable way to check if DB is initialized by checking for the actual file
+const isDBInitialized = () => {
+  try {
+    const dbPath = path.join(process.cwd(), 'data.db');
+    return fs.existsSync(dbPath);
+  } catch (error) {
+    console.error('Error checking DB file:', error);
+    return false;
+  }
+};
 
 // Middleware to verify JWT token
 const verifyToken = (req: NextApiRequest): Promise<any> => {
@@ -39,11 +49,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   
   try {
-    // Initialize database if not already done
-    if (!dbInitialized) {
+    // Initialize database if needed
+    if (!isDBInitialized()) {
       try {
         await initializeDB();
-        dbInitialized = true;
         console.log('DB initialized in products API');
       } catch (dbError) {
         console.error('Failed to initialize database:', dbError);

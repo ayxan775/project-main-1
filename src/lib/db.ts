@@ -4,6 +4,24 @@ const isServer = typeof window === 'undefined';
 // Type for database instance
 type DBInstance = any;
 
+// Check if database file exists
+const doesDBFileExist = async () => {
+  if (!isServer) return false;
+  
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const dbPath = path.join(process.cwd(), 'data.db');
+    return fs.existsSync(dbPath);
+  } catch (error) {
+    console.error('Error checking if DB file exists:', error);
+    return false;
+  }
+};
+
+// Track if this is the first time initializing
+let isFirstInitialization = true;
+
 // Initialize database
 export async function initializeDB() {
   if (!isServer) {
@@ -11,6 +29,9 @@ export async function initializeDB() {
   }
 
   try {
+    // Check if this is the first time running or if the file exists
+    const dbFileExisted = await doesDBFileExist();
+    
     // Dynamic imports to avoid issues with client-side code
     const { open } = await import('sqlite');
     const sqlite3 = await import('sqlite3');
@@ -124,10 +145,11 @@ export async function initializeDB() {
       }
     }
 
-    // Import initial products data if table is empty
+    // Only import initial products if this is a brand new database (file didn't exist before)
+    // and the products table is empty
     const productsCount = await db.get('SELECT COUNT(*) as count FROM products');
     
-    if (productsCount.count === 0) {
+    if (productsCount.count === 0 && !dbFileExisted && isFirstInitialization) {
       try {
         // Try to load products from JSON file
         const fs = await import('fs');
@@ -175,6 +197,9 @@ export async function initializeDB() {
         console.error('Error importing initial products:', error);
       }
     }
+    
+    // Mark that we've already initialized once
+    isFirstInitialization = false;
 
     // Initialize default job openings if none exist
     const jobOpeningsCount = await db.get('SELECT COUNT(*) as count FROM job_openings');
