@@ -244,7 +244,7 @@ export function AboutAzPort() {
                 variants={counterVariants}
                 whileHover={{ y: -5 }}
               >
-                <div className="text-blue-600 text-4xl font-bold mb-2 flex items-end">
+                <div className="text-blue-600 text-4xl font-bold mb-2">
                   <motion.span
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -253,7 +253,6 @@ export function AboutAzPort() {
                   >
                     10+
                   </motion.span>
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 ml-1 mb-2"></div>
                 </div>
                 <div className="text-gray-800 dark:text-gray-300 font-medium">Years of Experience</div>
               </motion.div>
@@ -263,7 +262,7 @@ export function AboutAzPort() {
                 variants={counterVariants}
                 whileHover={{ y: -5 }}
               >
-                <div className="text-blue-600 text-4xl font-bold mb-2 flex items-end">
+                <div className="text-blue-600 text-4xl font-bold mb-2">
                   <motion.span
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -272,7 +271,6 @@ export function AboutAzPort() {
                   >
                     500+
                   </motion.span>
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 ml-1 mb-2"></div>
                 </div>
                 <div className="text-gray-800 dark:text-gray-300 font-medium">Projects Completed</div>
               </motion.div>
@@ -282,7 +280,7 @@ export function AboutAzPort() {
                 variants={counterVariants}
                 whileHover={{ y: -5 }}
               >
-                <div className="text-blue-600 text-4xl font-bold mb-2 flex items-end">
+                <div className="text-blue-600 text-4xl font-bold mb-2">
                   <motion.span
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -291,7 +289,6 @@ export function AboutAzPort() {
                   >
                     100+
                   </motion.span>
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 ml-1 mb-2"></div>
                 </div>
                 <div className="text-gray-800 dark:text-gray-300 font-medium">Regular Clients</div>
               </motion.div>
@@ -301,7 +298,7 @@ export function AboutAzPort() {
                 variants={counterVariants}
                 whileHover={{ y: -5 }}
               >
-                <div className="text-blue-600 text-4xl font-bold mb-2 flex items-end">
+                <div className="text-blue-600 text-4xl font-bold mb-2">
                   <motion.span
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -310,7 +307,6 @@ export function AboutAzPort() {
                   >
                     24/7
                   </motion.span>
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 ml-1 mb-2"></div>
                 </div>
                 <div className="text-gray-800 dark:text-gray-300 font-medium">Customer Support</div>
               </motion.div>

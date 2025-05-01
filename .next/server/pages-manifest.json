@@ -3,11 +3,11 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
-  "/products": "pages/products.js",
-  "/api/products": "pages/api/products.js",
   "/admin": "pages/admin.js",
-  "/about": "pages/about.js",
+  "/api/products": "pages/api/products.js",
+  "/distribution": "pages/distribution.js",
   "/certifications": "pages/certifications.js",
-  "/testing": "pages/testing.js",
-  "/404": "pages/404.js"
+  "/career": "pages/career.js",
+  "/api/job-openings": "pages/api/job-openings.js",
+  "/about": "pages/about.js"
 }

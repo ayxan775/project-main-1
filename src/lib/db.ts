@@ -62,6 +62,17 @@ export async function initializeDB() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (category) REFERENCES categories(name)
       );
+      
+      CREATE TABLE IF NOT EXISTS job_openings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        department TEXT NOT NULL,
+        location TEXT NOT NULL,
+        type TEXT NOT NULL,
+        description TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        active INTEGER DEFAULT 1
+      );
     `);
     
     console.log('Database tables created');
@@ -163,6 +174,42 @@ export async function initializeDB() {
       } catch (error) {
         console.error('Error importing initial products:', error);
       }
+    }
+
+    // Initialize default job openings if none exist
+    const jobOpeningsCount = await db.get('SELECT COUNT(*) as count FROM job_openings');
+    if (jobOpeningsCount.count === 0) {
+      const defaultJobs = [
+        {
+          title: "Supply Chain Manager",
+          department: "operations",
+          location: "Baku, Azerbaijan",
+          type: "Full-time",
+          description: "Leading and optimizing supply chain operations..."
+        },
+        {
+          title: "Sales Representative",
+          department: "sales",
+          location: "Baku, Azerbaijan",
+          type: "Full-time",
+          description: "Developing and maintaining client relationships..."
+        },
+        {
+          title: "Logistics Coordinator",
+          department: "logistics",
+          location: "Baku, Azerbaijan",
+          type: "Full-time",
+          description: "Coordinating shipment schedules and delivery routes..."
+        }
+      ];
+
+      for (const job of defaultJobs) {
+        await db.run(
+          'INSERT INTO job_openings (title, department, location, type, description) VALUES (?, ?, ?, ?, ?)',
+          [job.title, job.department, job.location, job.type, job.description]
+        );
+      }
+      console.log('Default job openings created');
     }
 
     // Store the db instance in module state

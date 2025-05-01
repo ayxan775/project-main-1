@@ -14,11 +14,6 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/index.js"
     ],
-    "/404": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/404.js"
-    ],
     "/_app": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
@@ -39,20 +34,20 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/admin.js"
     ],
+    "/career": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/career.js"
+    ],
     "/certifications": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
       "static/chunks/pages/certifications.js"
     ],
-    "/products": [
+    "/distribution": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/products.js"
-    ],
-    "/testing": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/testing.js"
+      "static/chunks/pages/distribution.js"
     ]
   },
   "ampFirstPages": []

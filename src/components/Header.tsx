@@ -38,7 +38,7 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
           : 'bg-white dark:bg-gray-900'
       }`}
     >
-      <nav className="container mx-auto px-4 py-4">
+      <nav className="container mx-auto px-4 py-1">
         <div className="flex items-center justify-between">
           <motion.div 
             className="flex items-center space-x-4"
@@ -47,22 +47,19 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
             transition={{ duration: 0.5 }}
           >
             <Link href="/" className="flex items-center space-x-4">
-              <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 overflow-hidden">
+              <div className="relative w-20 h-20 sm:w-22 sm:h-22 lg:w-24 lg:h-24 overflow-hidden">
                 <Image 
                   src="/images/logo.png" 
                   alt="AzPort Supply - Industrial Supply Chain Solutions"
                   fill
                   className="object-contain"
-                  sizes="(max-width: 640px) 48px, (max-width: 1024px) 56px, 64px"
+                  sizes="(max-width: 640px) 80px, (max-width: 1024px) 88px, 96px"
                   priority
                 />
               </div>
               <div className="flex flex-col">
                 <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white font-sans">
                   AzPort Supply
-                </span>
-                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium hidden sm:block">
-                  Industrial Solutions
                 </span>
               </div>
             </Link>
@@ -78,10 +75,10 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
               >
                 {[
                   { href: "/", label: "Home" },
-                  { href: "/about", label: "About Us" },
                   { href: "/products", label: "Products" },
-                  { href: "/certifications", label: "Certifications" },
-                  { href: "/testing", label: "Testing" }
+                  { href: "/distribution", label: "Distribution" },
+                  { href: "/career", label: "Career" },
+                  { href: "/about", label: "About Us" }
                 ].map((item) => (
                   <motion.li key={item.href} whileHover={{ scale: 1.05 }}>
                     <Link
@@ -179,10 +176,10 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
               >
                 {[
                   { href: "/", label: "Home" },
-                  { href: "/about", label: "About Us" },
                   { href: "/products", label: "Products" },
-                  { href: "/certifications", label: "Certifications" },
-                  { href: "/testing", label: "Testing" }
+                  { href: "/distribution", label: "Distribution" },
+                  { href: "/career", label: "Career" },
+                  { href: "/about", label: "About Us" }
                 ].map((item) => (
                   <motion.li
                     key={item.href}

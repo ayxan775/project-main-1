@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 export function OfficialRepresentative() {
   const containerVariants = {
@@ -59,13 +60,15 @@ export function OfficialRepresentative() {
               ensuring you receive the best hydraulic solutions for your industrial applications.
             </p>
             
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-medium transition-colors duration-300 shadow-lg hover:shadow-blue-500/30"
-            >
-              Explore Balflex Products
-            </motion.button>
+            <Link href="/products">
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-medium transition-colors duration-300 shadow-lg hover:shadow-blue-500/30"
+              >
+                Explore Balflex Products
+              </motion.button>
+            </Link>
           </motion.div>
           
           <motion.div className="lg:w-1/2 relative" variants={itemVariants}>

@@ -48,7 +48,7 @@ export function Hero() {
           >
             <span className="block mb-2">Reliable Industrial</span>
             <span className="block bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
-              Supply & Logistics
+              Supply Solution
             </span>
           </motion.h1>
 
@@ -58,7 +58,7 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
           >
-            Your trusted partner in industrial supply chain management and logistics solutions in Azerbaijan
+            Your trusted partner in industrial supply chain management in Azerbaijan
           </motion.p>
 
           <motion.div 

@@ -86,7 +86,7 @@ export function SafetyStandards() {
   );
 
   return (
-    <section className="py-24 bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
+    <section className="pt-2 bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
       <div className="container mx-auto px-4 relative">
         {/* Decorative elements */}
         <div className="absolute top-40 right-20 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl"></div>
@@ -245,21 +245,7 @@ export function SafetyStandards() {
               </motion.div>
             </motion.div>
             
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex justify-center"
-            >
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-lg font-medium transition-colors duration-300 shadow-lg"
-              >
-                Download Safety Certificates
-              </motion.button>
-            </motion.div>
+           
           </motion.div>
         </motion.div>
       </div>

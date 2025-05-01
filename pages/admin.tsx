@@ -12,6 +12,7 @@ import { Product } from '../src/types';
 import { ImageUpload } from '../src/components/ImageUpload';
 import { DocumentUpload } from '../src/components/DocumentUpload';
 import { CatalogManager } from '../src/components/CatalogManager';
+import { JobOpeningsManager } from '../src/components/JobOpeningsManager';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -933,6 +934,8 @@ export default function AdminPage() {
         return <CategoryManager token={token} />;
       case 'catalog':
         return <CatalogManager />;
+      case 'careers':
+        return <JobOpeningsManager token={token} />;
       case 'backup':
         return (
           <div className="space-y-8">

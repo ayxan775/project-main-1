@@ -1,31 +1,9 @@
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Package2, BarChart3, Users, ArrowRight, Download, AlertCircle } from 'lucide-react';
+import { ArrowRight, Download, AlertCircle, X } from 'lucide-react';
 import { Products as ProductsComponent } from '../components/Products';
-
-// Stats shown above the product listing
-const stats = [
-  { 
-    value: "500+", 
-    label: "Products Available", 
-    icon: <Package2 className="w-6 h-6 text-blue-500" /> 
-  },
-  { 
-    value: "99.8%", 
-    label: "Customer Satisfaction", 
-    icon: <Users className="w-6 h-6 text-blue-500" /> 
-  },
-  { 
-    value: "ISO 9001", 
-    label: "Quality Certified", 
-    icon: <ShieldCheck className="w-6 h-6 text-blue-500" /> 
-  },
-  { 
-    value: "24/7", 
-    label: "Technical Support", 
-    icon: <BarChart3 className="w-6 h-6 text-blue-500" /> 
-  }
-];
+import { Contact } from '../components/Contact';
 
 // Testimonials from customers
 const testimonials = [
@@ -44,7 +22,9 @@ const testimonials = [
 ];
 
 export function Products() {
+  const router = useRouter();
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   const handleDownloadCatalog = async () => {
     try {
@@ -117,9 +97,10 @@ export function Products() {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => setShowContactModal(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center"
               >
-                Request Custom Quote
+                Request Custom Quota
                 <ArrowRight className="ml-2 h-5 w-5" />
               </motion.button>
               <motion.button
@@ -142,40 +123,8 @@ export function Products() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-12 bg-white dark:bg-gray-900">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-                className="bg-gray-50 dark:bg-gray-800 p-6 rounded-xl text-center"
-              >
-                <div className="inline-flex justify-center items-center rounded-full p-3 bg-blue-100 dark:bg-blue-900/30 mb-4">
-                  {stat.icon}
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</h3>
-                <p className="text-gray-500 dark:text-gray-400">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Products Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4 mb-12">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Browse Our Product Range</h2>
-            <p className="text-gray-600 dark:text-gray-300">
-              All products undergo rigorous quality testing and are backed by our comprehensive warranty program.
-            </p>
-          </div>
-        </div>
-        
+      <section className="pt-0 pb-16">
         <ProductsComponent />
       </section>
 
@@ -223,15 +172,46 @@ export function Products() {
           <p className="text-blue-100 max-w-2xl mx-auto mb-8">
             Our team of experts is ready to help you find the perfect solutions for your specific requirements.
           </p>
-                        <motion.button
+          <motion.button
             whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.98 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => router.push('/contact')}
             className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
           >
             Contact Our Specialists
-                  </motion.button>
-                </div>
+          </motion.button>
+        </div>
       </section>
+
+      {/* Contact Modal */}
+      {showContactModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={() => setShowContactModal(false)}>
+              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+            </div>
+            
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            
+            <div 
+              className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+              onClick={e => e.stopPropagation()}
+            >
+              <Contact 
+                isModal={true}
+                modalTitle="Request Custom Quota"
+                onClose={() => setShowContactModal(false)}
+                initialValues={{
+                  name: '',
+                  email: '',
+                  subject: 'Custom Quota Request',
+                  message: ''
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

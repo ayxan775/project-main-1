@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronRight, X, Search, Grid, List, SlidersHorizontal, 
@@ -23,6 +23,7 @@ export function Products() {
   const [error, setError] = useState<string | null>(null);
   const [showContactModal, setShowContactModal] = useState<boolean>(false);
   const [displayLimit, setDisplayLimit] = useState<number>(6);
+  const [hasMore, setHasMore] = useState<boolean>(true);
 
   // Fetch products from API
   useEffect(() => {
@@ -77,6 +78,28 @@ export function Products() {
         return 0;
     }
   });
+
+  // Add intersection observer for infinite scroll
+  const observer = React.useRef<IntersectionObserver | null>(null);
+  const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (isLoading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setDisplayLimit(prevLimit => {
+          const newLimit = prevLimit + 6;
+          setHasMore(newLimit < sortedProducts.length);
+          return newLimit;
+        });
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [isLoading, hasMore, sortedProducts.length]);
+
+  // Update hasMore when products change
+  useEffect(() => {
+    setHasMore(displayLimit < sortedProducts.length);
+  }, [sortedProducts.length, displayLimit]);
 
   // Set related products when a product is selected
   useEffect(() => {
@@ -367,22 +390,29 @@ export function Products() {
         </div>
 
         {/* Products Grid/List */}
-        <div className={`grid ${isGridView ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} gap-6 mb-8`}>
-          {sortedProducts.slice(0, displayLimit).map((product) => renderProductCard(product))}
+        <div className={`grid ${isGridView ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} gap-6 mb-8`}>
+          {sortedProducts.slice(0, displayLimit).map((product, index) => {
+            if (index === displayLimit - 1) {
+              return (
+                <div key={product.id} ref={lastProductElementRef}>
+                  {renderProductCard(product)}
+                </div>
+              );
+            } else {
+              return (
+                <div key={product.id}>
+                  {renderProductCard(product)}
+                </div>
+              );
+            }
+          })}
         </div>
 
-        {/* Load More Button */}
-        {displayLimit < sortedProducts.length && (
-          <div className="flex justify-center mt-8">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setDisplayLimit(prev => prev + 6)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center"
-            >
-              Load More Products
-              <ChevronRight className="ml-2 h-5 w-5" />
-            </motion.button>
+        {isLoading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {[...Array(3)].map((_, index) => (
+              <ProductSkeleton key={index} />
+            ))}
           </div>
         )}
       </div>
