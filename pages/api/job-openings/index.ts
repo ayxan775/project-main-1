@@ -102,10 +102,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!id) {
         return res.status(400).json({ message: 'Job opening ID is required' });
       }
-      
-      await db.run('DELETE FROM job_openings WHERE id = ?', [id]);
-      
-      return res.status(200).json({ message: 'Job opening deleted successfully' });
+
+      try {
+        // Start a transaction
+        await db.run('BEGIN TRANSACTION');
+
+        // Check if the job exists
+        const job = await db.get('SELECT * FROM job_openings WHERE id = ?', [id]);
+        if (!job) {
+          await db.run('ROLLBACK');
+          return res.status(404).json({ message: 'Job opening not found' });
+        }
+
+        // Perform the deletion
+        const result = await db.run('DELETE FROM job_openings WHERE id = ?', [id]);
+        
+        if (result.changes === 0) {
+          await db.run('ROLLBACK');
+          return res.status(400).json({ message: 'Failed to delete job opening' });
+        }
+
+        // Commit the transaction
+        await db.run('COMMIT');
+        
+        return res.status(200).json({ 
+          message: 'Job opening deleted successfully',
+          deletedId: id 
+        });
+      } catch (error) {
+        // Rollback on error
+        await db.run('ROLLBACK');
+        console.error('Error deleting job opening:', error);
+        return res.status(500).json({ 
+          message: 'Failed to delete job opening',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
     }
     
     // Method not allowed

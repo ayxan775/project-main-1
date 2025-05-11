@@ -5,22 +5,6 @@ import { ArrowRight, Download, AlertCircle, X } from 'lucide-react';
 import { Products as ProductsComponent } from '../components/Products';
 import { Contact } from '../components/Contact';
 
-// Testimonials from customers
-const testimonials = [
-  {
-    quote: "The industrial products we purchased have significantly improved our operational efficiency by 35%.",
-    author: "Michael Chen",
-    company: "Global Manufacturing Inc.",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=100"
-  },
-  {
-    quote: "Their quality control equipment has been instrumental in maintaining our high standards of production.",
-    author: "Sarah Johnson",
-    company: "Quality Systems Ltd.",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100"
-  }
-];
-
 export function Products() {
   const router = useRouter();
   const [downloadError, setDownloadError] = useState<string | null>(null);
@@ -126,43 +110,6 @@ export function Products() {
       {/* Products Section */}
       <section className="pt-0 pb-16">
         <ProductsComponent />
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-16 bg-gray-50 dark:bg-gray-800/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">What Our Clients Say</h2>
-            <p className="text-gray-600 dark:text-gray-300">
-              Don't just take our word for it - hear from some of our satisfied customers
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-                className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg"
-              >
-                <div className="flex items-center mb-6">
-                  <img 
-                    src={testimonial.image} 
-                    alt={testimonial.author}
-                    className="w-14 h-14 rounded-full object-cover mr-4"
-                  />
-                    <div>
-                    <h4 className="font-bold text-gray-900 dark:text-white">{testimonial.author}</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{testimonial.company}</p>
-                  </div>
-                </div>
-                <p className="text-gray-600 dark:text-gray-300 italic">"{testimonial.quote}"</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
       </section>
 
       {/* CTA Section */}

@@ -165,24 +165,34 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
     }
     
     setError(null);
+    setLoading(true);
     
     try {
       const response = await fetch(`/api/job-openings?id=${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
         }
       });
       
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Failed to delete job opening');
+        throw new Error(data.message || 'Failed to delete job opening');
       }
       
-      // Refresh job openings list
-      await fetchJobOpenings();
+      // Remove the deleted job from the state
+      setJobOpenings(prev => prev.filter(job => job.id !== id));
+      
+      // Show success message
+      setError(null);
     } catch (error) {
-      setError('Failed to delete job opening');
       console.error('Error deleting job opening:', error);
+      setError(error instanceof Error ? error.message : 'Failed to delete job opening');
+    } finally {
+      setLoading(false);
     }
   };
   

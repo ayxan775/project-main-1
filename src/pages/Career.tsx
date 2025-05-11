@@ -254,7 +254,7 @@ export function Career() {
                   <p className="mt-2">We don't have any active positions at the moment, but please check back later.</p>
                 </div>
                 <p className="mt-6 text-gray-600 dark:text-gray-300">
-                  Want to be notified about future openings? Contact us at <span className="text-blue-600 dark:text-blue-400">careers@company.com</span>
+                  Want to be notified about future openings? Contact us at <span className="text-blue-600 dark:text-blue-400">careers@azportsupply.com</span>
                 </p>
               </div>
             ) : (
