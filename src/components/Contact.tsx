@@ -8,6 +8,40 @@ import en from '../../locales/en.json';
 import az from '../../locales/az.json';
 import ru from '../../locales/ru.json';
 
+// Define an interface for the contact translation keys
+interface ContactTranslations {
+  labelName: string;
+  placeholderName: string;
+  labelEmail: string;
+  placeholderEmail: string;
+  labelSubject: string;
+  placeholderSubject: string;
+  labelMessage: string;
+  placeholderMessage: string;
+  buttonSend: string;
+  buttonSending?: string; // Optional as it might not be in all locale files initially
+  alertSuccess: string;
+  alertError?: string; // Optional for the same reason
+  modalDefaultTitle: string;
+  pageBadge: string;
+  pageHeading1: string;
+  pageHeading2: string;
+  pageSubtitle: string;
+  infoTitle: string;
+  infoLabelPhone: string;
+  infoLabelEmail: string;
+  infoLabelLocation: string;
+  infoLabelHours: string;
+  infoHoursLine1: string;
+  infoHoursLine2: string;
+  infoLabelFollow: string;
+  formTitle: string;
+  mapOverlayTitle: string;
+  mapOverlayText: string;
+  mapLink: string;
+  // Add any other keys that are part of your contact translations
+}
+
 interface ContactFormData {
   name: string;
   email: string;
@@ -25,7 +59,7 @@ interface ContactProps {
 export function Contact({ isModal, modalTitle, initialValues, onClose }: ContactProps) {
   const router = useRouter();
   const { locale } = router;
-  const t = locale === 'az' ? az.contact : locale === 'ru' ? ru.contact : en.contact; // Select translations
+  const t = (locale === 'az' ? az.contact : locale === 'ru' ? ru.contact : en.contact) as ContactTranslations; // Select and cast translations
 
   const [formData, setFormData] = useState<ContactFormData>(initialValues || {
     name: '',
