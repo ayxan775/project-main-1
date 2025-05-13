@@ -11,6 +11,9 @@
     "serve": "node server.js",
     "setup": "node -e \"const fs=require('fs'); const path=require('path'); const dir=path.join(process.cwd(), 'src', 'lib'); if(!fs.existsSync(dir)){fs.mkdirSync(dir, {recursive: true})};\""
   },
+  "engines": {
+    "node": "^20.0.0"
+  },
   "dependencies": {
     "@types/formidable": "^3.4.5",
     "@types/uuid": "^10.0.0",
