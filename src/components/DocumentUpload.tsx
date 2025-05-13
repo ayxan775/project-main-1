@@ -1,6 +1,12 @@
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { AlertTriangle, FileText, Upload, X } from 'lucide-react';
+import { useRouter } from 'next/router'; // Import useRouter
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 interface DocumentUploadProps {
   document: string | null;
@@ -13,6 +19,10 @@ export function DocumentUpload({
   onDocumentChange,
   maxSize = 10 * 1024 * 1024 // 10MB default
 }: DocumentUploadProps) {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az.documentUpload : locale === 'ru' ? ru.documentUpload : en.documentUpload; // Select translations
+
   const [error, setError] = React.useState<string | null>(null);
 
   // Handle document drop
@@ -27,7 +37,8 @@ export function DocumentUpload({
     
     // Check file size
     if (file.size > maxSize) {
-      setError(`File is too large. Maximum size is ${maxSize / (1024 * 1024)}MB.`);
+      const sizeInMB = maxSize / (1024 * 1024);
+      setError(t.errorSize.replace('{size}', sizeInMB.toString())); // Use translation
       return;
     }
     
@@ -42,7 +53,7 @@ export function DocumentUpload({
     ];
     
     if (!supportedTypes.includes(file.type)) {
-      setError('Unsupported file type. Please upload a PDF, Word document, Excel sheet, or text file.');
+      setError(t.errorType); // Use translation
       return;
     }
     
@@ -52,9 +63,13 @@ export function DocumentUpload({
       const result = e.target?.result as string;
       onDocumentChange(result);
     };
+    reader.onerror = () => {
+      setError(t.errorReadFail || 'Failed to read file. Please try again.'); // Add a fallback translation
+      console.error('FileReader error:', reader.error);
+    };
     reader.readAsDataURL(file);
-  }, [maxSize, onDocumentChange]);
-  
+  }, [maxSize, onDocumentChange, t.errorReadFail]);
+
   // Setup dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -103,8 +118,8 @@ export function DocumentUpload({
     } catch (e) {
       console.error('Error extracting filename:', e);
     }
-    
-    return 'document';
+
+    return t.fallbackFilename; // Use translation for fallback
   };
 
   return (
@@ -129,7 +144,7 @@ export function DocumentUpload({
                 {getFilenameFromDocument()}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Click to replace document
+                {t.uploadedStateText} {/* Use translation */}
               </p>
             </div>
           </div>
@@ -154,11 +169,11 @@ export function DocumentUpload({
           <Upload className="w-12 h-12 mx-auto text-blue-500 dark:text-blue-400 opacity-75" />
           <p className="mt-3 text-sm font-medium text-gray-700 dark:text-gray-300">
             {isDragActive
-              ? 'Drop the document here...'
-              : 'Drag & drop document here, or click to select'}
+              ? t.dropzoneActive // Use translation
+              : t.dropzoneInactive} {/* Use translation */}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Supported formats: PDF, Word, Excel, Text (max {maxSize / (1024 * 1024)}MB)
+            {t.dropzoneHint.replace('{size}', (maxSize / (1024 * 1024)).toString())} {/* Use translation */}
           </p>
         </div>
       )}

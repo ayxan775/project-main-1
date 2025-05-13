@@ -1,6 +1,12 @@
 import React from 'react';
-import { Package, Tag, Key, LogOut, Database, Upload, Briefcase } from 'lucide-react';
+import { Package, Tag, Key, LogOut, Database, Upload, Briefcase, Languages } from 'lucide-react';
 import { AdminSection } from '../types';
+import { useRouter } from 'next/router'; // Import useRouter
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 interface AdminSidePanelProps {
   activeSection: string;
@@ -9,13 +15,18 @@ interface AdminSidePanelProps {
 }
 
 export function AdminSidePanel({ activeSection, onSectionChange, onLogout }: AdminSidePanelProps) {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az.adminSidePanel : locale === 'ru' ? ru.adminSidePanel : en.adminSidePanel; // Select translations
+
   const sections: AdminSection[] = [
-    { id: 'products', name: 'Products', icon: <Package className="w-5 h-5" /> },
-    { id: 'categories', name: 'Categories', icon: <Tag className="w-5 h-5" /> },
-    { id: 'catalog', name: 'Catalog', icon: <Upload className="w-5 h-5" /> },
-    { id: 'careers', name: 'Careers', icon: <Briefcase className="w-5 h-5" /> },
-    { id: 'backup', name: 'Backup & Restore', icon: <Database className="w-5 h-5" /> },
-    { id: 'password', name: 'Change Password', icon: <Key className="w-5 h-5" /> }
+    { id: 'products', name: t.sectionProducts, icon: <Package className="w-5 h-5" /> },
+    { id: 'categories', name: t.sectionCategories, icon: <Tag className="w-5 h-5" /> },
+    { id: 'catalog', name: t.sectionCatalog, icon: <Upload className="w-5 h-5" /> },
+    { id: 'careers', name: t.sectionCareers, icon: <Briefcase className="w-5 h-5" /> },
+    { id: 'translations', name: t.sectionTranslations, icon: <Languages className="w-5 h-5" /> },
+    { id: 'backup', name: t.sectionBackup, icon: <Database className="w-5 h-5" /> },
+    { id: 'password', name: t.sectionPassword, icon: <Key className="w-5 h-5" /> }
   ];
 
   return (
@@ -23,7 +34,7 @@ export function AdminSidePanel({ activeSection, onSectionChange, onLogout }: Adm
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center space-x-3">
           <Package className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Admin Panel</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t.title}</h1> {/* Use translation */}
         </div>
       </div>
 
@@ -52,7 +63,7 @@ export function AdminSidePanel({ activeSection, onSectionChange, onLogout }: Adm
           className="w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-lg text-white bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 transition-colors"
         >
           <LogOut className="w-5 h-5" />
-          <span className="font-medium">Logout</span>
+          <span className="font-medium">{t.logoutButton}</span> {/* Use translation */}
         </button>
       </div>
     </div>

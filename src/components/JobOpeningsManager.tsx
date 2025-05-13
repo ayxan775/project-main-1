@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Briefcase, Edit, Trash2, Plus, X, Save, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/router'; // Import useRouter
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 interface JobOpening {
   id?: number;
@@ -16,6 +22,10 @@ interface JobOpeningsManagerProps {
 }
 
 export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az.jobOpeningsManager : locale === 'ru' ? ru.jobOpeningsManager : en.jobOpeningsManager; // Select translations
+
   const [jobOpenings, setJobOpenings] = useState<JobOpening[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,17 +39,20 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
     active: true
   });
   const [isEditing, setIsEditing] = useState(false);
-  
+
+  // Use translations for department names
   const departments = [
-    { id: 'all', name: 'All Departments' },
-    { id: 'engineering', name: 'Engineering' },
-    { id: 'sales', name: 'Sales' },
-    { id: 'operations', name: 'Operations' },
-    { id: 'logistics', name: 'Logistics' }
+    { id: 'all', name: t.deptAll },
+    { id: 'engineering', name: t.deptEngineering },
+    { id: 'sales', name: t.deptSales },
+    { id: 'operations', name: t.deptOperations },
+    { id: 'logistics', name: t.deptLogistics }
+    // Note: 'general' is used as a fallback, ensure t.deptGeneral exists if it needs to be selectable
   ];
-  
-  const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship'];
-  
+
+  // Use translations for job types
+  const jobTypes = [t.typeFullTime, t.typePartTime, t.typeContract, t.typeInternship];
+
   // Fetch all job openings
   const fetchJobOpenings = async () => {
     setLoading(true);
@@ -47,15 +60,15 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
     
     try {
       const response = await fetch('/api/job-openings');
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch job openings');
+        throw new Error(t.errorFetch); // Use translation
       }
-      
+
       const data = await response.json();
       setJobOpenings(data);
     } catch (error) {
-      setError('Failed to load job openings. Please try again.');
+      setError(t.errorLoad); // Use translation
       console.error('Error fetching job openings:', error);
     } finally {
       setLoading(false);
@@ -119,7 +132,7 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
     setError(null);
     
     if (!formData.title || !formData.location || !formData.type || !formData.description) {
-      setError('All fields are required');
+      setError(t.errorAllFieldsRequired); // Use translation
       return;
     }
     
@@ -130,9 +143,9 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
       // Set a default department if not provided
       const dataToSend = {
         ...formData,
-        department: formData.department || 'general'
+        department: formData.department || 'general' // Consider translating 'general' if it's user-facing
       };
-      
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -141,26 +154,27 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
         },
         body: JSON.stringify(dataToSend)
       });
-      
+
       if (!response.ok) {
-        throw new Error(`Failed to ${isEditing ? 'update' : 'create'} job opening`);
+        const errorKey = isEditing ? t.errorUpdate : t.errorCreate;
+        throw new Error(errorKey); // Use translation
       }
-      
+
       // Refresh job openings list
       await fetchJobOpenings();
-      
+
       // Close modal and reset form
       setShowModal(false);
       resetForm();
     } catch (error) {
-      setError(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      setError(`Error: ${error instanceof Error ? error.message : t.errorUnknown}`); // Use translation
       console.error('Error saving job opening:', error);
     }
   };
   
   // Delete job opening
   const handleDeleteJobOpening = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this job opening?')) {
+    if (!window.confirm(t.confirmDelete)) { // Use translation
       return;
     }
     
@@ -178,19 +192,19 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
       });
       
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to delete job opening');
+        throw new Error(data.message || t.errorDelete); // Use translation
       }
-      
+
       // Remove the deleted job from the state
       setJobOpenings(prev => prev.filter(job => job.id !== id));
-      
+
       // Show success message
       setError(null);
     } catch (error) {
       console.error('Error deleting job opening:', error);
-      setError(error instanceof Error ? error.message : 'Failed to delete job opening');
+      setError(error instanceof Error ? error.message : t.errorDelete); // Use translation
     } finally {
       setLoading(false);
     }
@@ -199,13 +213,13 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Job Openings Manager</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t.title}</h2> {/* Use translation */}
         <button
           onClick={handleAddJobOpening}
           className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-5 h-5" />
-          <span>Add New</span>
+          <span>{t.buttonAddNew}</span> {/* Use translation */}
         </button>
       </div>
       
@@ -217,10 +231,10 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
       )}
       
       {loading ? (
-        <div className="py-12 text-center text-gray-500 dark:text-gray-400">Loading job openings...</div>
+        <div className="py-12 text-center text-gray-500 dark:text-gray-400">{t.statusLoading}</div> // Use translation
       ) : jobOpenings.length === 0 ? (
         <div className="py-12 text-center text-gray-500 dark:text-gray-400">
-          No job openings found. Click "Add New" to create one.
+          {t.statusNoJobs} {/* Use translation */}
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
@@ -228,22 +242,22 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Job Title
+                  {t.headerJobTitle} {/* Use translation */}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Department
+                  {t.headerDepartment} {/* Use translation */}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Location
+                  {t.headerLocation} {/* Use translation */}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Type
+                  {t.headerType} {/* Use translation */}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Status
+                  {t.headerStatus} {/* Use translation */}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Actions
+                  {t.headerActions} {/* Use translation */}
                 </th>
               </tr>
             </thead>
@@ -264,10 +278,10 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      job.active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                      job.active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                                 : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
                     }`}>
-                      {job.active ? 'Active' : 'Inactive'}
+                      {job.active ? t.statusActive : t.statusInactive} {/* Use translation */}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -277,14 +291,14 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
                         className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                       >
                         <Edit className="w-5 h-5" />
-                        <span className="sr-only">Edit</span>
+                        <span className="sr-only">{t.srEdit}</span> {/* Use translation */}
                       </button>
                       <button
                         onClick={() => job.id && handleDeleteJobOpening(job.id)}
                         className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                       >
                         <Trash2 className="w-5 h-5" />
-                        <span className="sr-only">Delete</span>
+                        <span className="sr-only">{t.srDelete}</span> {/* Use translation */}
                       </button>
                     </div>
                   </td>
@@ -313,14 +327,14 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
                   </div>
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                     <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-                      {isEditing ? 'Edit Job Opening' : 'Add New Job Opening'}
+                      {isEditing ? t.modalTitleEdit : t.modalTitleAdd} {/* Use translation */}
                     </h3>
-                    
+
                     <div className="mt-4">
                       <form onSubmit={handleSaveJobOpening} className="space-y-4">
                         <div>
                           <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Job Title
+                            {t.labelJobTitle} {/* Use translation */}
                           </label>
                           <input
                             type="text"
@@ -335,7 +349,7 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
                         
                         <div>
                           <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Location
+                            {t.labelLocation} {/* Use translation */}
                           </label>
                           <input
                             type="text"
@@ -350,7 +364,7 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
                         
                         <div>
                           <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Job Type
+                            {t.labelJobType} {/* Use translation */}
                           </label>
                           <select
                             id="type"
@@ -360,8 +374,8 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                             required
                           >
-                            <option value="">Select job type</option>
-                            {jobTypes.map((type) => (
+                            <option value="">{t.selectJobTypePlaceholder}</option> {/* Use translation */}
+                            {jobTypes.map((type) => ( // jobTypes array is already translated
                               <option key={type} value={type}>
                                 {type}
                               </option>
@@ -371,7 +385,7 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
                         
                         <div>
                           <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Description
+                            {t.labelDescription} {/* Use translation */}
                           </label>
                           <textarea
                             id="description"
@@ -394,7 +408,7 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           />
                           <label htmlFor="active" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                            Active
+                            {t.labelActive} {/* Use translation */}
                           </label>
                         </div>
                       </form>
@@ -409,14 +423,14 @@ export function JobOpeningsManager({ token }: JobOpeningsManagerProps) {
                   onClick={handleSaveJobOpening}
                   className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
                 >
-                  Save
+                  {t.buttonSave} {/* Use translation */}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
                   className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
-                  Cancel
+                  {t.buttonCancel} {/* Use translation */}
                 </button>
               </div>
             </div>

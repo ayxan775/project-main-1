@@ -1,8 +1,18 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/router'; // Import useRouter
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 export function OfficialRepresentative() {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az.officialRepresentative : locale === 'ru' ? ru.officialRepresentative : en.officialRepresentative; // Select translations
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -41,32 +51,30 @@ export function OfficialRepresentative() {
         >
           <motion.div className="lg:w-1/2 lg:pr-16 mb-12 lg:mb-0" variants={itemVariants}>
             <div className="relative">
-              <div className="absolute -top-10 -left-10 text-7xl text-blue-600/10 font-bold z-0">BALFLEX</div>
+              <div className="absolute -top-10 -left-10 text-7xl text-blue-600/10 font-bold z-0">{t.decorativeText}</div> {/* Use translation */}
               <h2 className="text-4xl md:text-5xl font-bold mb-6 dark:text-white relative z-10">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400">
-                  Official Representative
+                  {t.heading1} {/* Use translation */}
                 </span>
-                <br />of Balflex
+                <br />{t.heading2} {/* Use translation */}
               </h2>
             </div>
-            
+
             <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg leading-relaxed">
-              As the exclusive authorized distributor of Balflex products in Azerbaijan, we provide high-quality hydraulic hoses, 
-              fittings, and accessories that meet international standards for safety and reliability.
+              {t.paragraph1} {/* Use translation */}
             </p>
-            
+
             <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed mb-10">
-              Our partnership with Balflex allows us to deliver premium European manufacturing quality with local support, 
-              ensuring you receive the best hydraulic solutions for your industrial applications.
+              {t.paragraph2} {/* Use translation */}
             </p>
-            
+
             <Link href="/products">
-              <motion.button 
+              <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-medium transition-colors duration-300 shadow-lg hover:shadow-blue-500/30"
               >
-                Explore Balflex Products
+                {t.buttonExplore} {/* Use translation */}
               </motion.button>
             </Link>
           </motion.div>
@@ -77,13 +85,13 @@ export function OfficialRepresentative() {
               <div className="flex justify-center mb-8">
                 <img
                   src="/images/logo_balflex.png"
-                  alt="Balflex Logo"
+                  alt={t.altBalflexLogo} // Use translation
                   className="h-24 filter drop-shadow-xl"
                 />
               </div>
-              
+
               <div className="space-y-6">
-                <motion.div 
+                <motion.div
                   className="flex items-center group"
                   whileHover={{ x: 5 }}
                 >
@@ -93,12 +101,12 @@ export function OfficialRepresentative() {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-bold dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">European Quality Standards</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">ISO 9001:2015 certified manufacturing</p>
+                    <h4 className="font-bold dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">{t.feature1Title}</h4> {/* Use translation */}
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{t.feature1Desc}</p> {/* Use translation */}
                   </div>
                 </motion.div>
-                
-                <motion.div 
+
+                <motion.div
                   className="flex items-center group"
                   whileHover={{ x: 5 }}
                 >
@@ -108,12 +116,12 @@ export function OfficialRepresentative() {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-bold dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">Certified Products</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">All products meet international certifications</p>
+                    <h4 className="font-bold dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">{t.feature2Title}</h4> {/* Use translation */}
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{t.feature2Desc}</p> {/* Use translation */}
                   </div>
                 </motion.div>
-                
-                <motion.div 
+
+                <motion.div
                   className="flex items-center group"
                   whileHover={{ x: 5 }}
                 >
@@ -123,16 +131,16 @@ export function OfficialRepresentative() {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-bold dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">Full Hydraulic Solutions</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Comprehensive range for all industrial needs</p>
+                    <h4 className="font-bold dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">{t.feature3Title}</h4> {/* Use translation */}
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{t.feature3Desc}</p> {/* Use translation */}
                   </div>
                 </motion.div>
               </div>
-              
+
               <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
                 <div className="flex items-center justify-end">
                   <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-bold px-4 py-1 rounded-full">
-                    Premium Partner
+                    {t.badgePremiumPartner} {/* Use translation */}
                   </div>
                 </div>
               </div>

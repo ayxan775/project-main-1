@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://azportsupply.com/sitemap.xml

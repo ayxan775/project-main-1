@@ -1,14 +1,30 @@
 import { useState } from 'react';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { ArrowRight, Download, AlertCircle, X } from 'lucide-react';
+import { ArrowRight, Download, AlertCircle } from 'lucide-react';
 import { Products as ProductsComponent } from '../components/Products';
 import { Contact } from '../components/Contact';
 
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
+
 export function Products() {
   const router = useRouter();
+  const { locale } = router;
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
+
+  // Determine translations based on current locale
+  const t = locale === 'az' ? az : locale === 'ru' ? ru : en;
+  const tProductsMain = t.productsMainPageContent;
+  const tContact = t.contact; // For the contact modal
+  const pageTitle = `${t.header.navProducts} | AzPort Supply`;
+  const pageDescription = tProductsMain.heroSubtitle;
+  const siteUrl = 'https://azportsupply.com'; // Ensure this is your correct domain
+  const canonicalUrl = `${siteUrl}${router.asPath}`;
 
   const handleDownloadCatalog = async () => {
     try {
@@ -19,8 +35,9 @@ export function Products() {
       const response = await fetch(`/api/catalog/download?t=${timestamp}`);
       
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to download catalog');
+        const errorData = await response.json();
+        // Use existing translation for default download error
+        throw new Error(errorData.message || t.aboutAzPort.downloadErrorDefault);
       }
 
       // Create a blob from the response
@@ -47,15 +64,24 @@ export function Products() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading catalog:', error);
-      setDownloadError(error instanceof Error ? error.message : 'Failed to download catalog');
+      setDownloadError(error instanceof Error ? error.message : t.aboutAzPort.downloadErrorDefault);
       setTimeout(() => setDownloadError(null), 5000);
     }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 min-h-screen pt-20">
-      {/* Hero Section */}
-      <section className="relative py-24 bg-blue-50 dark:bg-blue-900/20 overflow-hidden">
+    <>
+      <Head>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+      </Head>
+      <div className="bg-white dark:bg-gray-900 min-h-screen pt-20">
+        {/* Hero Section */}
+        <section className="relative py-24 bg-blue-50 dark:bg-blue-900/20 overflow-hidden">
         <div className="absolute inset-0 opacity-20 dark:opacity-10">
           <svg className="absolute left-0 top-0 h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="#2563eb">
             <path d="M0 .5H31.5V32" />
@@ -70,12 +96,11 @@ export function Products() {
             transition={{ duration: 0.7 }}
             className="max-w-3xl"
           >
-            <span className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-full font-medium uppercase tracking-wider">Premium Solutions</span>
-            <h1 className="text-4xl md:text-5xl font-bold mt-4 mb-6 text-gray-900 dark:text-white">
-              Industrial Products <span className="text-blue-600 dark:text-blue-400">Engineered for Excellence</span>
-            </h1>
+            <span className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-full font-medium uppercase tracking-wider">{tProductsMain.heroBadge}</span>
+            <h1 className="text-4xl md:text-5xl font-bold mt-4 mb-6 text-gray-900 dark:text-white"
+                dangerouslySetInnerHTML={{ __html: tProductsMain.heroHeading.replace('Engineered for Excellence', '<span class="text-blue-600 dark:text-blue-400">Engineered for Excellence</span>') }} />
             <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
-              Discover our comprehensive range of high-quality industrial equipment, designed to meet the most demanding requirements in today's challenging environments.
+              {tProductsMain.heroSubtitle}
             </p>
             <div className="flex flex-wrap gap-4">
               <motion.button
@@ -84,7 +109,7 @@ export function Products() {
                 onClick={() => setShowContactModal(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center"
               >
-                Request Custom Quota
+                {tProductsMain.requestCustomQuotaButton}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </motion.button>
               <motion.button
@@ -93,7 +118,7 @@ export function Products() {
                 onClick={handleDownloadCatalog}
                 className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 px-6 py-3 rounded-lg font-medium flex items-center"
               >
-                Download Catalog
+                {tProductsMain.downloadCatalogButton}
                 <Download className="ml-2 h-5 w-5" />
               </motion.button>
             </div>
@@ -115,9 +140,9 @@ export function Products() {
       {/* CTA Section */}
       <section className="py-20 bg-blue-600 dark:bg-blue-700">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">Ready to Elevate Your Industrial Operations?</h2>
+          <h2 className="text-3xl font-bold text-white mb-4">{tProductsMain.ctaHeading}</h2>
           <p className="text-blue-100 max-w-2xl mx-auto mb-8">
-            Our team of experts is ready to help you find the perfect solutions for your specific requirements.
+            {tProductsMain.ctaSubtitle}
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -125,7 +150,7 @@ export function Products() {
             onClick={() => router.push('/contact')}
             className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            Contact Our Specialists
+            {tProductsMain.ctaButton}
           </motion.button>
         </div>
       </section>
@@ -146,12 +171,12 @@ export function Products() {
             >
               <Contact 
                 isModal={true}
-                modalTitle="Request Custom Quota"
+                modalTitle={tProductsMain.modalCustomQuotaTitle}
                 onClose={() => setShowContactModal(false)}
                 initialValues={{
                   name: '',
                   email: '',
-                  subject: 'Custom Quota Request',
+                  subject: tProductsMain.modalCustomQuotaSubject,
                   message: ''
                 }}
               />
@@ -160,5 +185,6 @@ export function Products() {
         </div>
       )}
     </div>
+    </>
   );
-} 
+}

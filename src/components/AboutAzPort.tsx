@@ -1,9 +1,18 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Download, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/router'; // Import useRouter
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 export function AboutAzPort() {
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az : locale === 'ru' ? ru : en; // Select translations
 
   const handleDownloadCatalog = async () => {
     try {
@@ -15,7 +24,8 @@ export function AboutAzPort() {
       
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to download catalog');
+        // Use default translation for error message if specific one isn't provided by API
+        throw new Error(error.message || t.aboutAzPort.downloadErrorDefault);
       }
 
       // Create a blob from the response
@@ -42,7 +52,8 @@ export function AboutAzPort() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading catalog:', error);
-      setDownloadError(error instanceof Error ? error.message : 'Failed to download catalog');
+      // Use default translation for error message
+      setDownloadError(error instanceof Error ? error.message : t.aboutAzPort.downloadErrorDefault);
       setTimeout(() => setDownloadError(null), 5000);
     }
   };
@@ -116,11 +127,11 @@ export function AboutAzPort() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="inline-block"
           >
-            <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-sm uppercase font-bold tracking-wider py-1 px-3 rounded-full mb-3 inline-block">About Us</span>
+            <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-sm uppercase font-bold tracking-wider py-1 px-3 rounded-full mb-3 inline-block">{t.aboutAzPort.badge}</span> {/* Use translation */}
           </motion.div>
           <h2 className="text-4xl md:text-5xl font-bold mb-6 dark:text-white relative">
             <span className="relative">
-              About 
+              {t.aboutAzPort.headingPart1} {/* Use translation */}
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400 ml-3">AzPort Supply</span>
               <motion.div 
                 className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-blue-600/50 to-blue-400/50 rounded-full"
@@ -138,7 +149,7 @@ export function AboutAzPort() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            Leading provider of premium hydraulic solutions in Azerbaijan
+            {t.aboutAzPort.subtitle} {/* Use translation */}
           </motion.p>
         </motion.div>
         
@@ -189,8 +200,8 @@ export function AboutAzPort() {
             >
               <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-transparent opacity-30 z-0"></div>
               <img 
-                src="/images/AzPort Supply.webp" 
-                alt="AzPort Supply Facility" 
+                src="/images/AzPort Supply.webp"
+                alt={t.aboutAzPort.imageAlt} // Use translation
                 className="rounded-lg w-full h-auto object-cover relative z-10"
               />
               <div className="absolute bottom-6 left-6 right-6 p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg z-20">
@@ -203,8 +214,8 @@ export function AboutAzPort() {
                       </svg>
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">Main Facility</h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Baku, Azerbaijan</p>
+                      <h4 className="font-medium text-gray-900 dark:text-white">{t.aboutAzPort.imageOverlayTitle}</h4> {/* Use translation */}
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t.aboutAzPort.imageOverlaySubtitle}</p> {/* Use translation */}
                     </div>
                   </div>
                   <motion.div 
@@ -226,13 +237,11 @@ export function AboutAzPort() {
           
           <motion.div className="space-y-8" variants={itemVariants}>
             <motion.p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed" variants={itemVariants}>
-              AzPort Supply is a leading provider of industrial hydraulic solutions in Azerbaijan. With years of experience and expertise,
-              we specialize in supplying premium hydraulic hoses, fittings, and accessories for various industrial applications.
+              {t.aboutAzPort.paragraph1} {/* Use translation */}
             </motion.p>
-            
+
             <motion.p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed" variants={itemVariants}>
-              Our mission is to deliver reliable, high-performance products that meet the demanding needs of industries
-              including oil and gas, construction, manufacturing, and marine sectors.
+              {t.aboutAzPort.paragraph2} {/* Use translation */}
             </motion.p>
             
             <motion.div 
@@ -254,9 +263,9 @@ export function AboutAzPort() {
                     10+
                   </motion.span>
                 </div>
-                <div className="text-gray-800 dark:text-gray-300 font-medium">Years of Experience</div>
+                <div className="text-gray-800 dark:text-gray-300 font-medium">{t.aboutAzPort.counterYears}</div> {/* Use translation */}
               </motion.div>
-              
+
               <motion.div 
                 className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border border-gray-100 dark:border-gray-700"
                 variants={counterVariants}
@@ -272,9 +281,9 @@ export function AboutAzPort() {
                     500+
                   </motion.span>
                 </div>
-                <div className="text-gray-800 dark:text-gray-300 font-medium">Projects Completed</div>
+                <div className="text-gray-800 dark:text-gray-300 font-medium">{t.aboutAzPort.counterProjects}</div> {/* Use translation */}
               </motion.div>
-              
+
               <motion.div 
                 className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border border-gray-100 dark:border-gray-700"
                 variants={counterVariants}
@@ -290,9 +299,9 @@ export function AboutAzPort() {
                     100+
                   </motion.span>
                 </div>
-                <div className="text-gray-800 dark:text-gray-300 font-medium">Regular Clients</div>
+                <div className="text-gray-800 dark:text-gray-300 font-medium">{t.aboutAzPort.counterClients}</div> {/* Use translation */}
               </motion.div>
-              
+
               <motion.div 
                 className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border border-gray-100 dark:border-gray-700"
                 variants={counterVariants}
@@ -308,7 +317,7 @@ export function AboutAzPort() {
                     24/7
                   </motion.span>
                 </div>
-                <div className="text-gray-800 dark:text-gray-300 font-medium">Customer Support</div>
+                <div className="text-gray-800 dark:text-gray-300 font-medium">{t.aboutAzPort.counterSupport}</div> {/* Use translation */}
               </motion.div>
             </motion.div>
           </motion.div>

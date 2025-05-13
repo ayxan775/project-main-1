@@ -2,6 +2,14 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import fs from 'fs';
 import path from 'path';
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '25mb', // Increase size limit to 25MB
+    },
+  },
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });

@@ -1,5 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/router'; // Import useRouter
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 interface AdvantageCardProps {
   icon: React.ReactNode;
@@ -9,6 +15,10 @@ interface AdvantageCardProps {
 }
 
 export function Advantages() {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az.advantages : locale === 'ru' ? ru.advantages : en.advantages; // Select translations
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -52,11 +62,11 @@ export function Advantages() {
           <div className="absolute inset-0 bg-blue-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           {icon}
         </div>
-        
-        <h3 className="text-xl font-bold text-center mb-4 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">{title}</h3>
-        
+
+        <h3 className="text-xl font-bold text-center mb-4 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">{title}</h3> {/* Title is passed as prop */}
+
         <p className="text-gray-600 dark:text-gray-300 text-center leading-relaxed">
-          {description}
+          {description} {/* Description is passed as prop */}
         </p>
       </div>
 
@@ -91,14 +101,14 @@ export function Advantages() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="inline-block"
           >
-            <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-sm uppercase font-bold tracking-wider py-1 px-3 rounded-full mb-3 inline-block">Why Choose Us</span>
+            <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-sm uppercase font-bold tracking-wider py-1 px-3 rounded-full mb-3 inline-block">{t.badge}</span> {/* Use translation */}
           </motion.div>
-          
+
           <h2 className="text-4xl md:text-5xl font-bold mb-6 dark:text-white">
             <span className="relative">
-              Advantages of 
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400 ml-3">Working With Us</span>
-              <motion.div 
+              {t.headingPart1} {/* Use translation */}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400 ml-3">{t.headingPart2}</span> {/* Use translation */}
+              <motion.div
                 className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-blue-600/50 to-blue-400/50 rounded-full"
                 initial={{ width: "0%" }}
                 whileInView={{ width: "100%" }}
@@ -115,11 +125,11 @@ export function Advantages() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            Experience the difference of partnering with Azerbaijan's premium hydraulic solutions provider
+            {t.subtitle} {/* Use translation */}
           </motion.p>
         </motion.div>
         
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20 relative z-10"
           initial="hidden"
           whileInView="visible"
@@ -133,10 +143,10 @@ export function Advantages() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             }
-            title="Premium Quality"
-            description="We provide only certified, high-quality hydraulic solutions that meet international standards and exceed customer expectations."
+            title={t.card1Title} // Use translation
+            description={t.card1Desc} // Use translation
           />
-          
+
           <AdvantageCard
             index={1}
             icon={
@@ -144,10 +154,10 @@ export function Advantages() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             }
-            title="Fast Delivery"
-            description="With large stock inventory and efficient logistics, we ensure quick delivery to minimize your downtime and keep your operations running."
+            title={t.card2Title} // Use translation
+            description={t.card2Desc} // Use translation
           />
-          
+
           <AdvantageCard
             index={2}
             icon={
@@ -155,10 +165,10 @@ export function Advantages() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             }
-            title="Expert Consultation"
-            description="Our team of experienced professionals provides technical expertise and guidance to help you select the right products for your specific needs."
+            title={t.card3Title} // Use translation
+            description={t.card3Desc} // Use translation
           />
-          
+
           <AdvantageCard
             index={3}
             icon={
@@ -166,8 +176,8 @@ export function Advantages() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             }
-            title="Dedicated Support"
-            description="We provide ongoing customer support and after-sales service to ensure your hydraulic systems operate at optimal efficiency."
+            title={t.card4Title} // Use translation
+            description={t.card4Desc} // Use translation
           />
         </motion.div>
       </div>

@@ -1,14 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronRight, X, Search, Grid, List, SlidersHorizontal, 
-  Download, Share2, ChevronLeft, 
+import {
+  ChevronRight, X, Search, Grid, List, SlidersHorizontal,
+  Download, Share2, ChevronLeft,
   Heart, Info, Truck, Shield, ArrowRight, FileText, Phone, AlertTriangle, Mail, MessageSquare, Send
 } from 'lucide-react';
 import { Product } from '../types';
 import { Contact } from './Contact';
+import { useRouter } from 'next/router'; // Import useRouter
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 export function Products() {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az.productsPage : locale === 'ru' ? ru.productsPage : en.productsPage; // Select translations
+  const tContact = locale === 'az' ? az.contact : locale === 'ru' ? ru.contact : en.contact; // For Contact modal
+
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -34,25 +45,27 @@ export function Products() {
         const response = await fetch('/api/products');
         
         if (!response.ok) {
-          throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`);
+          // Keep detailed error for console
+          console.error(`Failed to fetch products: ${response.status} ${response.statusText}`);
+          throw new Error(t.errorFetch); // Use translation for user message
         }
-        
+
         const data = await response.json();
         setProducts(data);
-        
+
         // Extract unique categories
         const uniqueCategories = Array.from(new Set(data.map((product: Product) => product.category))) as string[];
         setCategories(uniqueCategories);
       } catch (error) {
         console.error('Error fetching products:', error);
-        setError(error instanceof Error ? error.message : 'Failed to fetch products');
+        setError(error instanceof Error ? error.message : t.errorFetch); // Use translation
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchProducts();
-  }, []);
+  }, [locale]); // Re-fetch if locale changes
 
   // Filter products based on category and search query
   const filteredProducts = products
@@ -158,13 +171,13 @@ export function Products() {
       <div className="flex items-start">
         <AlertTriangle className="h-5 w-5 text-red-500 mr-3 mt-0.5" />
         <div>
-          <h4 className="text-sm font-medium text-red-800 dark:text-red-300">Error loading products</h4>
+          <h4 className="text-sm font-medium text-red-800 dark:text-red-300">{t.errorModalTitle}</h4> {/* Use translation */}
           <p className="text-sm text-red-700 dark:text-red-400 mt-1">{error}</p>
-          <button 
+          <button
             className="mt-2 text-sm font-medium text-red-600 dark:text-red-300 hover:text-red-800 dark:hover:text-red-200"
             onClick={() => window.location.reload()}
           >
-            Try again
+            {t.buttonTryAgain} {/* Use translation */}
           </button>
         </div>
       </div>
@@ -209,7 +222,7 @@ export function Products() {
             </span>
             {hasMultipleImages && (
               <span className="bg-gray-800/70 text-white px-3 py-1 rounded-full text-xs shadow-md">
-                {getInteriorImages(product).length} photos
+                {t.imageCount.replace('{count}', getInteriorImages(product).length.toString())} {/* Use translation */}
               </span>
             )}
           </div>
@@ -235,12 +248,12 @@ export function Products() {
               onClick={() => setSelectedProduct(product)}
               className="flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold group"
             >
-              View Details 
+              {t.buttonViewDetails} {/* Use translation */}
               <ChevronRight className="h-4 w-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
             </button>
             <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
               <FileText className="h-4 w-4 mr-1" />
-              <span>Documentation</span>
+              <span>{t.textDocumentation}</span> {/* Use translation */}
             </div>
           </div>
         </div>
@@ -299,7 +312,7 @@ export function Products() {
           <div className="relative w-full md:w-96">
             <input
               type="text"
-              placeholder="Search products..."
+              placeholder={t.searchPlaceholder} // Use translation
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2 pl-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -331,11 +344,11 @@ export function Products() {
                 onChange={(e) => setSortOption(e.target.value)}
                 className="appearance-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 py-2 pl-3 pr-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="default">Sort by: Default</option>
-                <option value="name-asc">Name (A-Z)</option>
-                <option value="name-desc">Name (Z-A)</option>
-                <option value="id-asc">Newest</option>
-                <option value="id-desc">Oldest</option>
+                <option value="default">{t.sortDefault}</option> {/* Use translation */}
+                <option value="name-asc">{t.sortNameAsc}</option> {/* Use translation */}
+                <option value="name-desc">{t.sortNameDesc}</option> {/* Use translation */}
+                <option value="id-asc">{t.sortNewest}</option> {/* Use translation */}
+                <option value="id-desc">{t.sortOldest}</option> {/* Use translation */}
               </select>
               <SlidersHorizontal className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
             </div>
@@ -356,9 +369,9 @@ export function Products() {
                 : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
             }`}
           >
-            All Products
+            {t.categoryAll} {/* Use translation */}
           </motion.button>
-          {categories.map((category) => (
+          {categories.map((category) => ( // Categories themselves are dynamic, might need translation at source
             <motion.button
               key={category}
               whileHover={{ scale: 1.05 }}
@@ -378,13 +391,16 @@ export function Products() {
         {/* Results Count */}
         <div className="flex justify-between items-center mb-6">
           <p className="text-gray-600 dark:text-gray-300">
-            Showing <span className="font-semibold">{Math.min(displayLimit, sortedProducts.length)}</span> 
-            {displayLimit < sortedProducts.length ? ` of ${sortedProducts.length}` : ''} products
+            {displayLimit < sortedProducts.length
+              ? t.resultsShowingOfTotal
+                  .replace('{count}', Math.min(displayLimit, sortedProducts.length).toString())
+                  .replace('{total}', sortedProducts.length.toString())
+              : t.resultsShowingAll.replace('{count}', sortedProducts.length.toString())}
             {selectedCategory !== "all" && (
-              <span> in <span className="font-semibold">{selectedCategory}</span></span>
+              <span>{t.resultsInCategoy.replace('{category}', selectedCategory)}</span>
             )}
             {searchQuery && (
-              <span> matching "<span className="font-semibold">{searchQuery}</span>"</span>
+              <span>{t.resultsMatchingQuery.replace('{query}', searchQuery)}</span>
             )}
           </p>
         </div>
@@ -408,11 +424,19 @@ export function Products() {
           })}
         </div>
 
-        {isLoading && (
+        {isLoading && !products.length && ( // Show skeleton only if products array is empty and loading
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {[...Array(3)].map((_, index) => (
+            {[...Array(displayLimit)].map((_, index) => ( // Show skeleton for current display limit
               <ProductSkeleton key={index} />
             ))}
+          </div>
+        )}
+
+        {!isLoading && sortedProducts.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-xl text-gray-500 dark:text-gray-400">
+              {searchQuery || selectedCategory !== "all" ? t.noProductsMatchFilters : t.noProductsFound}
+            </p>
           </div>
         )}
       </div>
@@ -537,21 +561,21 @@ export function Products() {
                   <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                     <div className="flex items-center text-blue-700 dark:text-blue-300 mb-1">
                       <Info className="h-4 w-4 mr-2" />
-                      <span className="text-sm font-medium">Product Information</span>
+                      <span className="text-sm font-medium">{t.modalInfoTitle}</span> {/* Use translation */}
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 text-sm">
-                      Complete product specifications are available in the documentation. Contact our team for custom requirements.
+                      {t.modalInfoText} {/* Use translation */}
                     </p>
                   </div>
-                  
+
                   <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
                     {selectedProduct.description}
                   </p>
-                  
+
                   {/* Product Features */}
                   {selectedProduct.specs && selectedProduct.specs.length > 0 && (
                     <div className="mb-4">
-                      <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Products</h3>
+                      <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">{t.modalSpecsTitle}</h3> {/* Use translation */}
                       <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
                         <ul className="space-y-2">
                           {selectedProduct.specs.map((spec, index) => (
@@ -566,15 +590,15 @@ export function Products() {
                       </div>
                     </div>
                   )}
-              
+
                   {/* Product Use Cases */}
                   {selectedProduct.useCases && selectedProduct.useCases.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Use Cases</h3>
+                      <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">{t.modalUseCasesTitle}</h3> {/* Use translation */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {selectedProduct.useCases.map((useCase, index) => (
-                          <div 
-                            key={index} 
+                          <div
+                            key={index}
                             className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg flex items-center"
                           >
                             <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2" />
@@ -584,10 +608,10 @@ export function Products() {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Action Buttons */}
                   <div className="flex flex-wrap gap-2">
-                    <button 
+                    <button
                       className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition duration-300 flex items-center justify-center"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -595,16 +619,16 @@ export function Products() {
                       }}
                     >
                       <Phone className="h-5 w-5 mr-2" />
-                      Request Quote
+                      {t.buttonRequestQuote} {/* Use translation */}
                     </button>
                     {selectedProduct.document && (
-                      <a 
-                        href={selectedProduct.document} 
+                      <a
+                        href={selectedProduct.document}
                         download={`${selectedProduct.name.replace(/\s+/g, '-').toLowerCase()}-specs.pdf`}
                         className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-3 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-300 flex items-center justify-center"
                       >
                         <Download className="h-5 w-5 mr-2" />
-                        Download Specs
+                        {t.buttonDownloadSpecs} {/* Use translation */}
                       </a>
                     )}
                   </div>
@@ -614,10 +638,10 @@ export function Products() {
               {/* Related Products */}
               {relatedProducts.length > 0 && (
                 <div className="border-t border-gray-200 dark:border-gray-700 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Related Products</h3>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{t.modalRelatedTitle}</h3> {/* Use translation */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {relatedProducts.map((product) => (
-                      <div 
+                      <div
                         key={product.id}
                         className="bg-gray-50 dark:bg-gray-900/50 rounded-lg overflow-hidden flex cursor-pointer hover:shadow-md transition-shadow"
                         onClick={(e) => {
@@ -627,8 +651,8 @@ export function Products() {
                       >
                         <div className="w-1/3">
                           {getCoverImage(product) ? (
-                            <img 
-                              src={getCoverImage(product)} 
+                            <img
+                              src={getCoverImage(product)}
                               alt={product.name}
                               className="w-full h-full object-cover"
                             />
@@ -642,7 +666,7 @@ export function Products() {
                           <h4 className="font-semibold text-gray-900 dark:text-white mb-1 line-clamp-1">{product.name}</h4>
                           <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-2">{product.description}</p>
                           <div className="flex items-center text-blue-600 dark:text-blue-400 text-sm font-medium">
-                            View Details
+                            {t.buttonViewDetails} {/* Use translation */}
                             <ArrowRight className="ml-1 h-3 w-3" />
                           </div>
                         </div>
@@ -673,13 +697,15 @@ export function Products() {
               className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <Contact 
+              <Contact
                 isModal={true}
-                modalTitle="Request a Quote"
+                modalTitle={t.contactModalTitle} // Use translation
                 initialValues={{
                   name: '',
                   email: '',
-                  subject: selectedProduct ? `Quote request for ${selectedProduct.name}` : 'Product inquiry',
+                  subject: selectedProduct
+                    ? t.contactModalSubjectProduct.replace('{productName}', selectedProduct.name)
+                    : t.contactModalSubjectDefault, // Use translation
                   message: ''
                 }}
                 onClose={() => setShowContactModal(false)}

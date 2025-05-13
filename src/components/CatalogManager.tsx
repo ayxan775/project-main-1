@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { DocumentUpload } from './DocumentUpload';
 import { Download, AlertTriangle, Trash2, RefreshCw } from 'lucide-react';
+import { useRouter } from 'next/router'; // Import useRouter
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 export function CatalogManager() {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az.catalogManager : locale === 'ru' ? ru.catalogManager : en.catalogManager; // Select translations
+
   const [catalog, setCatalog] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -47,7 +57,7 @@ export function CatalogManager() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload catalog');
+        throw new Error(t.errorUpload); // Use translation
       }
 
       // Refresh catalog status after successful upload
@@ -56,7 +66,7 @@ export function CatalogManager() {
       setUploadSuccess(true);
       setTimeout(() => setUploadSuccess(false), 3000);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to upload catalog');
+      setError(error instanceof Error ? error.message : t.errorUpload); // Use translation
     } finally {
       setLoading(false);
     }
@@ -73,7 +83,7 @@ export function CatalogManager() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete catalog');
+        throw new Error(t.errorDelete); // Use translation
       }
 
       // Refresh catalog status after successful deletion
@@ -81,7 +91,7 @@ export function CatalogManager() {
       setDeleteSuccess(true);
       setTimeout(() => setDeleteSuccess(false), 3000);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to delete catalog');
+      setError(error instanceof Error ? error.message : t.errorDelete); // Use translation
     } finally {
       setLoading(false);
     }
@@ -94,9 +104,9 @@ export function CatalogManager() {
   return (
     <div className="space-y-6 p-6">
       <div className="border-b border-gray-200 dark:border-gray-700 pb-5">
-        <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Catalog Management</h3>
+        <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">{t.title}</h3> {/* Use translation */}
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          Upload and manage your product catalog PDF. This will be available for customers to download.
+          {t.description} {/* Use translation */}
         </p>
       </div>
 
@@ -114,7 +124,7 @@ export function CatalogManager() {
       {uploadSuccess && (
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
           <p className="text-sm text-green-700 dark:text-green-300">
-            Catalog uploaded successfully!
+            {t.uploadSuccess} {/* Use translation */}
           </p>
         </div>
       )}
@@ -122,18 +132,18 @@ export function CatalogManager() {
       {deleteSuccess && (
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
           <p className="text-sm text-green-700 dark:text-green-300">
-            Catalog deleted successfully!
+            {t.deleteSuccess} {/* Use translation */}
           </p>
         </div>
       )}
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white">Upload Catalog</h4>
-          <button 
+          <h4 className="text-lg font-medium text-gray-900 dark:text-white">{t.uploadSectionTitle}</h4> {/* Use translation */}
+          <button
             onClick={handleRefreshCatalog}
             className="flex items-center text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-            title="Refresh catalog status"
+            title={t.refreshButtonTitle} // Use translation
           >
             <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
@@ -145,7 +155,7 @@ export function CatalogManager() {
         />
         {loading && (
           <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-            Uploading catalog...
+            {t.loadingUpload} {/* Use translation */}
           </div>
         )}
       </div>
@@ -154,16 +164,16 @@ export function CatalogManager() {
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-medium text-blue-700 dark:text-blue-300">Current Catalog</h4>
+              <h4 className="text-sm font-medium text-blue-700 dark:text-blue-300">{t.currentCatalogTitle}</h4> {/* Use translation */}
               <p className="mt-1 text-sm text-blue-600 dark:text-blue-400">
-                A catalog is currently available for download
+                {t.currentCatalogDesc} {/* Use translation */}
               </p>
             </div>
             <div className="flex space-x-3">
               <button
                 onClick={handleDeleteCatalog}
                 className="flex items-center text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                title="Delete current catalog"
+                title={t.deleteButtonTitle} // Use translation
               >
                 <Trash2 className="h-5 w-5" />
               </button>

@@ -1,5 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/router'; // Import useRouter
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 interface CertificationCardProps {
   title: string;
@@ -10,6 +16,10 @@ interface CertificationCardProps {
 }
 
 export function SafetyStandards() {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az.safetyStandards : locale === 'ru' ? ru.safetyStandards : en.safetyStandards; // Select translations
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -70,9 +80,9 @@ export function SafetyStandards() {
         {icon}
       </div>
       
-      <h3 className="text-xl font-bold text-center mb-4 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">{title}</h3>
+      <h3 className="text-xl font-bold text-center mb-4 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">{title}</h3> {/* Title is passed as prop */}
       <p className="text-gray-600 dark:text-gray-300 text-center">
-        {description}
+        {description} {/* Description is passed as prop */}
       </p>
 
       <motion.div 
@@ -106,16 +116,16 @@ export function SafetyStandards() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="inline-block"
           >
-            <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-sm uppercase font-bold tracking-wider py-1 px-3 rounded-full mb-3 inline-block">Trust & Quality</span>
+            <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-sm uppercase font-bold tracking-wider py-1 px-3 rounded-full mb-3 inline-block">{t.badge}</span> {/* Use translation */}
           </motion.div>
-          
+
           <h2 className="text-4xl md:text-5xl font-bold mb-6 dark:text-white">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400">
-              Safety Standards
+              {t.heading} {/* Use translation */}
             </span>
           </h2>
-          
-          <motion.div 
+
+          <motion.div
             className="max-w-3xl mx-auto"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -123,8 +133,7 @@ export function SafetyStandards() {
             transition={{ duration: 0.6, delay: 0.3 }}
           >
             <p className="text-gray-600 dark:text-gray-300 text-lg mb-0">
-              At AzPort Supply, we prioritize safety above all else. Our products comply with the most rigorous 
-              international safety standards to ensure reliable and safe operation in all working conditions.
+              {t.subtitle} {/* Use translation */}
             </p>
           </motion.div>
         </motion.div>
@@ -136,8 +145,8 @@ export function SafetyStandards() {
           whileInView="visible"
           viewport={{ once: true, amount: 0.1 }}
         >
-          <CertificationCard 
-            title="ISO 9001:2015" 
+          <CertificationCard
+            title={t.card1Title} // Use translation
             color="border-blue-600"
             custom={0}
             icon={
@@ -145,11 +154,11 @@ export function SafetyStandards() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             }
-            description="Quality management systems certification ensuring consistent quality and customer satisfaction."
+            description={t.card1Desc} // Use translation
           />
-          
-          <CertificationCard 
-            title="EN 853/EN 857" 
+
+          <CertificationCard
+            title={t.card2Title} // Use translation
             color="border-blue-600"
             custom={1}
             icon={
@@ -157,11 +166,11 @@ export function SafetyStandards() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             }
-            description="European standards for hydraulic hose assemblies with specific requirements for safety and performance."
+            description={t.card2Desc} // Use translation
           />
-          
-          <CertificationCard 
-            title="DNV-GL Certification" 
+
+          <CertificationCard
+            title={t.card3Title} // Use translation
             color="border-blue-600"
             custom={2}
             icon={
@@ -169,7 +178,7 @@ export function SafetyStandards() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             }
-            description="Marine industry certification ensuring products meet stringent safety requirements for maritime use."
+            description={t.card3Desc} // Use translation
           />
         </motion.div>
         
@@ -192,14 +201,14 @@ export function SafetyStandards() {
               className="text-2xl font-bold mb-6 text-center text-white"
               variants={itemVariants}
             >
-              Our Commitment to Safety
+              {t.commitmentTitle} {/* Use translation */}
             </motion.h3>
-            
-            <motion.div 
+
+            <motion.div
               className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
               variants={itemVariants}
             >
-              <motion.div 
+              <motion.div
                 className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/20 group hover:bg-white/20 transition-all duration-300"
                 whileHover={{ y: -5 }}
               >
@@ -209,12 +218,12 @@ export function SafetyStandards() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                   </div>
-                  <h4 className="text-lg font-bold text-white">Quality Control</h4>
+                  <h4 className="text-lg font-bold text-white">{t.commitmentItem1Title}</h4> {/* Use translation */}
                 </div>
-                <p className="text-blue-100">Regular testing at every stage of production with detailed documentation.</p>
+                <p className="text-blue-100">{t.commitmentItem1Desc}</p> {/* Use translation */}
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/20 group hover:bg-white/20 transition-all duration-300"
                 whileHover={{ y: -5 }}
               >
@@ -224,12 +233,12 @@ export function SafetyStandards() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                     </svg>
                   </div>
-                  <h4 className="text-lg font-bold text-white">Traceability</h4>
+                  <h4 className="text-lg font-bold text-white">{t.commitmentItem2Title}</h4> {/* Use translation */}
                 </div>
-                <p className="text-blue-100">Complete documentation and product history available for all items.</p>
+                <p className="text-blue-100">{t.commitmentItem2Desc}</p> {/* Use translation */}
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/20 group hover:bg-white/20 transition-all duration-300"
                 whileHover={{ y: -5 }}
               >
@@ -239,12 +248,12 @@ export function SafetyStandards() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                   </div>
-                  <h4 className="text-lg font-bold text-white">Training & Support</h4>
+                  <h4 className="text-lg font-bold text-white">{t.commitmentItem3Title}</h4> {/* Use translation */}
                 </div>
-                <p className="text-blue-100">Technical guidance and safety training for proper installation.</p>
+                <p className="text-blue-100">{t.commitmentItem3Desc}</p> {/* Use translation */}
               </motion.div>
             </motion.div>
-            
+
            
           </motion.div>
         </motion.div>

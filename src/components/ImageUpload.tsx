@@ -1,6 +1,12 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, Image as ImageIcon, AlertTriangle, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/router'; // Import useRouter
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 interface ImageUploadProps {
   coverImage: string;
@@ -17,6 +23,10 @@ export function ImageUpload({
   onInteriorImagesChange,
   maxSize = 5 * 1024 * 1024 // 5MB default
 }: ImageUploadProps) {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az.imageUpload : locale === 'ru' ? ru.imageUpload : en.imageUpload; // Select translations
+
   const [error, setError] = React.useState<string | null>(null);
 
   const validateImage = async (url: string, isCover: boolean = false) => {
@@ -30,25 +40,25 @@ export function ImageUpload({
           if (isCover) {
             // Recommended dimensions: 800x600 to 1200x900 (4:3 ratio)
             if (img.width < 800 || img.height < 600) {
-              reject('Cover image is too small. Minimum size is 800x600 pixels.');
+              reject(t.errorCoverSmall); // Use translation
             } else if (img.width > 1200 || img.height > 900) {
-              reject('Cover image is too large. Maximum size is 1200x900 pixels.');
+              reject(t.errorCoverLarge); // Use translation
             } else if (Math.abs(img.width / img.height - 4/3) > 0.1) {
-              reject('Cover image should have a 4:3 aspect ratio (e.g., 800x600, 1200x900).');
+              reject(t.errorCoverAspectRatio); // Use translation
             }
           }
           // For interior images
           else {
             if (img.width < 600 || img.height < 400) {
-              reject('Interior image is too small. Minimum size is 600x400 pixels.');
+              reject(t.errorInteriorSmall); // Use translation
             }
           }
           resolve(true);
         };
-        img.onerror = () => reject('Failed to load image. Please check the URL.');
+        img.onerror = () => reject(t.errorLoadFail); // Use translation
       });
     } catch (error) {
-      throw new Error('Invalid image URL');
+      throw new Error(t.errorInvalidUrl); // Use translation
     }
   };
 
@@ -79,10 +89,10 @@ export function ImageUpload({
     
     const file = acceptedFiles[0]; // Only use the first file for cover
     if (file.size > maxSize) {
-      setError(`File too large. Maximum size is ${maxSize / (1024 * 1024)}MB.`);
+      setError(t.errorFileTooLarge.replace('{size}', (maxSize / (1024 * 1024)).toString())); // Use translation
       return;
     }
-    
+
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target?.result) {
@@ -90,10 +100,10 @@ export function ImageUpload({
       }
     };
     reader.onerror = () => {
-      setError("Failed to read file. Please try again.");
+      setError(t.errorReadFail); // Use translation
     };
     reader.readAsDataURL(file);
-  }, [onCoverImageChange, maxSize, handleCoverImageChange]);
+  }, [onCoverImageChange, maxSize, handleCoverImageChange, t]);
 
   const onDropInterior = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
     handleRejectedFiles(rejectedFiles);
@@ -102,10 +112,10 @@ export function ImageUpload({
     
     acceptedFiles.forEach(file => {
       if (file.size > maxSize) {
-        setError(`File too large. Maximum size is ${maxSize / (1024 * 1024)}MB.`);
+        setError(t.errorFileTooLarge.replace('{size}', (maxSize / (1024 * 1024)).toString())); // Use translation
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
@@ -113,11 +123,11 @@ export function ImageUpload({
         }
       };
       reader.onerror = () => {
-        setError("Failed to read file. Please try again.");
+        setError(t.errorReadFail); // Use translation
       };
       reader.readAsDataURL(file);
     });
-  }, [interiorImages, onInteriorImagesChange, maxSize, handleInteriorImageChange]);
+  }, [interiorImages, onInteriorImagesChange, maxSize, handleInteriorImageChange, t]);
 
   const handleRejectedFiles = (rejectedFiles: any[]) => {
     if (rejectedFiles.length > 0) {
@@ -155,7 +165,7 @@ export function ImageUpload({
       console.log('Cover image removed successfully');
     } catch (error) {
       console.error('Error removing cover image:', error);
-      setError('Failed to remove cover image. Please try again.');
+      setError(t.errorRemoveCover); // Use translation
     }
   };
 
@@ -165,17 +175,17 @@ export function ImageUpload({
     try {
       if (index < 0 || index >= interiorImages.length) {
         console.error(`Invalid image index: ${index}`);
-        setError(`Invalid image index: ${index}`);
+        setError(t.errorInvalidIndex.replace('{index}', index.toString())); // Use translation
         return;
       }
-      
+
       const newImages = [...interiorImages];
       newImages.splice(index, 1);
       onInteriorImagesChange(newImages);
       console.log(`Interior image at index ${index} removed successfully`);
     } catch (error) {
       console.error(`Error removing interior image at index ${index}:`, error);
-      setError('Failed to remove interior image. Please try again.');
+      setError(t.errorRemoveInterior); // Use translation
     }
   };
 
@@ -195,9 +205,9 @@ export function ImageUpload({
       {/* Cover Image Upload */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Cover Image (Main Product Image) *
+          {t.labelCover} {/* Use translation */}
         </label>
-        
+
         <div
           {...getCoverRootProps()}
           className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all ${
@@ -210,11 +220,11 @@ export function ImageUpload({
           <ImageIcon className="w-12 h-12 mx-auto text-blue-500 dark:text-blue-400 opacity-75" />
           <p className="mt-3 text-sm font-medium text-gray-700 dark:text-gray-300">
             {isCoverDragActive
-              ? 'Drop the cover image here...'
-              : 'Drag & drop cover image here, or click to select'}
+              ? t.dropzoneCoverActive // Use translation
+              : t.dropzoneCoverInactive} {/* Use translation */}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Supported formats: JPEG, PNG, GIF, WebP (max {maxSize / (1024 * 1024)}MB)
+            {t.dropzoneHint.replace('{size}', (maxSize / (1024 * 1024)).toString())} {/* Use translation */}
           </p>
         </div>
 
@@ -223,7 +233,7 @@ export function ImageUpload({
             <div className="relative group inline-block overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
               <img
                 src={coverImage}
-                alt="Cover Image"
+                alt={t.altCover} // Use translation
                 className="h-40 w-auto object-contain"
               />
               <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -231,7 +241,7 @@ export function ImageUpload({
                   type="button"
                   onClick={removeCoverImage}
                   className="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors shadow-sm"
-                  aria-label="Remove cover image"
+                  aria-label={t.ariaRemoveCover} // Use translation
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -244,9 +254,9 @@ export function ImageUpload({
       {/* Interior Images Upload */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Interior Images (Additional Product Photos)
+          {t.labelInterior} {/* Use translation */}
         </label>
-        
+
         <div
           {...getInteriorRootProps()}
           className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all ${
@@ -259,11 +269,11 @@ export function ImageUpload({
           <Upload className="w-12 h-12 mx-auto text-blue-500 dark:text-blue-400 opacity-75" />
           <p className="mt-3 text-sm font-medium text-gray-700 dark:text-gray-300">
             {isInteriorDragActive
-              ? 'Drop the interior images here...'
-              : 'Drag & drop interior images here, or click to select'}
+              ? t.dropzoneInteriorActive // Use translation
+              : t.dropzoneInteriorInactive} {/* Use translation */}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Supported formats: JPEG, PNG, GIF, WebP (max {maxSize / (1024 * 1024)}MB)
+            {t.dropzoneHint.replace('{size}', (maxSize / (1024 * 1024)).toString())} {/* Use translation */}
           </p>
         </div>
 
@@ -273,7 +283,7 @@ export function ImageUpload({
               <div key={index} className="relative group rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700">
                 <img
                   src={image}
-                  alt={`Interior Image ${index + 1}`}
+                  alt={t.altInterior.replace('{index}', (index + 1).toString())} // Use translation
                   className="w-full h-32 object-cover"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -281,7 +291,7 @@ export function ImageUpload({
                     type="button"
                     onClick={(e) => removeInteriorImage(index, e)}
                     className="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors shadow-sm"
-                    aria-label={`Remove interior image ${index + 1}`}
+                    aria-label={t.ariaRemoveInterior.replace('{index}', (index + 1).toString())} // Use translation
                   >
                     <X className="w-4 h-4" />
                   </button>

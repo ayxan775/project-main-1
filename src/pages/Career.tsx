@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import Head from 'next/head';
 import { motion } from 'framer-motion';
 import { Briefcase, GraduationCap, Users, Heart, Send, Mail, X } from 'lucide-react';
+import { useRouter } from 'next/router';
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 interface JobOpening {
   id: number;
@@ -18,7 +25,18 @@ export function Career() {
   const [error, setError] = useState<string | null>(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobOpening | null>(null);
-  
+
+  const router = useRouter();
+  const { locale } = router;
+
+  // Determine translations based on current locale
+  const t = locale === 'az' ? az.careerPageContent : locale === 'ru' ? ru.careerPageContent : en.careerPageContent;
+  const tGlobal = locale === 'az' ? az : locale === 'ru' ? ru : en; // For header.navCareer
+  const pageTitle = `${tGlobal.header.navCareer} | AzPort Supply`;
+  const pageDescription = t.heroSubtitle;
+  const siteUrl = 'https://azportsupply.com'; // Ensure this is your correct domain
+  const canonicalUrl = `${siteUrl}${router.asPath}`;
+
   // Add this for debugging in browsers
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -68,18 +86,18 @@ export function Career() {
   const benefits = [
     {
       icon: <GraduationCap className="h-6 w-6" />,
-      title: "Professional Development",
-      description: "Continuous learning and growth opportunities"
+      title: t.benefit1Title,
+      description: t.benefit1Desc
     },
     {
       icon: <Users className="h-6 w-6" />,
-      title: "Collaborative Environment",
-      description: "Work with talented professionals"
+      title: t.benefit2Title,
+      description: t.benefit2Desc
     },
     {
       icon: <Heart className="h-6 w-6" />,
-      title: "Comprehensive Benefits",
-      description: "Health insurance and competitive compensation"
+      title: t.benefit3Title,
+      description: t.benefit3Desc
     }
   ];
 
@@ -152,9 +170,18 @@ export function Career() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 min-h-screen pt-20">
-      {/* Hero Section */}
-      <section className="relative py-24 bg-blue-50 dark:bg-blue-900/20 overflow-hidden">
+    <>
+      <Head>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+      </Head>
+      <div className="bg-white dark:bg-gray-900 min-h-screen pt-20">
+        {/* Hero Section */}
+        <section className="relative py-24 bg-blue-50 dark:bg-blue-900/20 overflow-hidden">
         <div className="absolute inset-0 opacity-20 dark:opacity-10">
           <svg className="absolute left-0 top-0 h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="#2563eb">
             <path d="M0 .5H31.5V32" />
@@ -170,13 +197,13 @@ export function Career() {
             className="text-center max-w-3xl mx-auto"
           >
             <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-sm uppercase font-bold tracking-wider py-1 px-3 rounded-full mb-6 inline-block">
-              Join Our Team
+              {t.heroBadge}
             </span>
             <h1 className="text-4xl md:text-5xl font-bold mb-6 dark:text-white">
-              Build Your Career With Us
+              {t.heroHeading}
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed mb-8">
-              Join a dynamic team dedicated to excellence in industrial supply and distribution
+              {t.heroSubtitle}
             </p>
           </motion.div>
         </div>
@@ -186,9 +213,9 @@ export function Career() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold mb-6 dark:text-white">Why Join Us?</h2>
+            <h2 className="text-3xl font-bold mb-6 dark:text-white">{t.benefitsHeading}</h2>
             <p className="text-gray-600 dark:text-gray-300">
-              We offer more than just a job - we offer a career with growth opportunities
+              {t.benefitsSubtitle}
             </p>
           </div>
           
@@ -222,9 +249,9 @@ export function Career() {
       <section className="py-20 bg-gray-50 dark:bg-gray-800">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold mb-6 dark:text-white">Current Openings</h2>
+            <h2 className="text-3xl font-bold mb-6 dark:text-white">{t.openingsHeading}</h2>
             <p className="text-gray-600 dark:text-gray-300 mb-8">
-              Explore our current job opportunities and find your perfect role
+              {t.openingsSubtitle}
             </p>
           </div>
           
@@ -232,29 +259,29 @@ export function Career() {
             {loading ? (
               <div className="text-center py-12">
                 <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-                <p className="mt-4 text-gray-600 dark:text-gray-300">Loading job openings...</p>
+                <p className="mt-4 text-gray-600 dark:text-gray-300">{t.loadingOpenings}</p>
               </div>
             ) : error ? (
               <div className="text-center py-12">
                 <div className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-4 rounded-lg shadow mb-4">
-                  <p className="font-bold">Error:</p>
+                  <p className="font-bold">{t.errorLoadingOpenings}</p>
                   <p>{error}</p>
                 </div>
-                <button 
+                <button
                   onClick={() => window.location.reload()}
                   className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-300"
                 >
-                  Retry
+                  {t.retryButton}
                 </button>
               </div>
             ) : jobOpenings.length === 0 ? (
               <div className="text-center py-12">
                 <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 p-4 rounded-lg shadow mb-4">
-                  <p className="font-medium">No job openings found.</p>
-                  <p className="mt-2">We don't have any active positions at the moment, but please check back later.</p>
+                  <p className="font-medium">{t.noOpeningsFound}</p>
+                  <p className="mt-2">{t.noOpeningsMessage}</p>
                 </div>
                 <p className="mt-6 text-gray-600 dark:text-gray-300">
-                  Want to be notified about future openings? Contact us at <span className="text-blue-600 dark:text-blue-400">careers@azportsupply.com</span>
+                  {t.futureOpeningsContact} <span className="text-blue-600 dark:text-blue-400">careers@azportsupply.com</span>
                 </p>
               </div>
             ) : (
@@ -283,7 +310,7 @@ export function Career() {
                       onClick={() => handleApplyNow(job)}
                       className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-300 flex items-center gap-2"
                     >
-                      Apply Now <Send className="h-4 w-4" />
+                      {t.applyButton} <Send className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -313,7 +340,7 @@ export function Career() {
                   className="bg-white dark:bg-gray-800 rounded-md text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none"
                   onClick={handleCloseModal}
                 >
-                  <span className="sr-only">Close</span>
+                  <span className="sr-only">{t.srClose}</span>
                   <X className="h-6 w-6" />
                 </button>
               </div>
@@ -325,26 +352,25 @@ export function Career() {
                   </div>
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                     <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-                      Apply for {selectedJob.title}
+                      {t.modalApplyTitle.replace('{jobTitle}', selectedJob.title)}
                     </h3>
                     <div className="mt-6 space-y-4">
                       <p className="text-gray-600 dark:text-gray-300">
-                        Thank you for your interest in joining our team! To apply for this position, 
-                        please send your resume and cover letter to:
+                        {t.modalApplyInstruction}
                       </p>
                       
                       <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg flex items-center">
                         <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400 mr-3 flex-shrink-0" />
-                        <a 
-                          href="mailto:Sales@azportsupply.com" 
+                        <a
+                          href={`mailto:${t.modalEmail}`}
                           className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
                         >
-                          Sales@azportsupply.com
+                          {t.modalEmail}
                         </a>
                       </div>
                       
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Please include the job title "{selectedJob.title}" in the subject line.
+                        {t.modalSubjectInstruction.replace('{jobTitle}', selectedJob.title)}
                       </p>
                     </div>
                   </div>
@@ -357,7 +383,7 @@ export function Career() {
                   onClick={handleCloseModal}
                   className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
                 >
-                  Got it, thanks!
+                  {t.modalCloseButton}
                 </button>
               </div>
             </div>
@@ -365,5 +391,6 @@ export function Career() {
         </div>
       )}
     </div>
+    </>
   );
-} 
+}

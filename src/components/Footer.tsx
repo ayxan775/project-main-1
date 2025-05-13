@@ -1,14 +1,25 @@
 import React from 'react';
 import { Phone, Mail, MapPin, Facebook, Instagram, Linkedin } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/router'; // Import useRouter
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 export function Footer() {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az : locale === 'ru' ? ru : en; // Select translations
+
   return (
     <footer className="bg-gray-900 text-white py-12">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Contact Info */}
           <div>
-            <h3 className="text-xl font-semibold mb-4">Contact Us</h3>
+            <h3 className="text-xl font-semibold mb-4">{t.footer.contactHeading}</h3> {/* Use translation */}
             <div className="space-y-3">
               <p className="flex items-center">
                 <Phone className="h-5 w-5 mr-2" />
@@ -24,22 +35,25 @@ export function Footer() {
               </p>
             </div>
           </div>
+          {/* Quick Links */}
           <div>
-            <h3 className="text-xl font-semibold mb-4">Quick Links</h3>
+            <h3 className="text-xl font-semibold mb-4">{t.footer.quickLinksHeading}</h3> {/* Use translation */}
             <ul className="space-y-2">
-              <li><Link href="/" className="hover:text-blue-400">Home</Link></li>
-              <li><Link href="/products" className="hover:text-blue-400">Products</Link></li>
-              <li><Link href="/distribution" className="hover:text-blue-400">Distribution</Link></li>
-              <li><Link href="/career" className="hover:text-blue-400">Career</Link></li>
-              <li><Link href="/about" className="hover:text-blue-400">About Us</Link></li>
-              <li><Link href="/contact" className="hover:text-blue-400">Contact Us</Link></li>
+              {/* Reuse header translations */}
+              <li><Link href="/" className="hover:text-blue-400">{t.header.navHome}</Link></li>
+              <li><Link href="/products" className="hover:text-blue-400">{t.header.navProducts}</Link></li>
+              <li><Link href="/distribution" className="hover:text-blue-400">{t.header.navDistribution}</Link></li>
+              <li><Link href="/career" className="hover:text-blue-400">{t.header.navCareer}</Link></li>
+              <li><Link href="/about" className="hover:text-blue-400">{t.header.navAbout}</Link></li>
+              <li><Link href="/contact" className="hover:text-blue-400">{t.header.contactUs}</Link></li>
             </ul>
           </div>
+          {/* Follow Us */}
           <div>
-            <h3 className="text-xl font-semibold mb-4">Follow Us</h3>
+            <h3 className="text-xl font-semibold mb-4">{t.footer.followUsHeading}</h3> {/* Use translation */}
             <div className="flex space-x-4">
-              <a 
-                href="https://www.facebook.com/profile.php?id=61575970508290" 
+              <a
+                href="https://www.facebook.com/profile.php?id=61575970508290"
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="hover:text-blue-400 transition-colors"
@@ -65,8 +79,9 @@ export function Footer() {
             </div>
           </div>
         </div>
+        {/* Copyright */}
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-          <p>&copy; 2025 AzPort Supply. All rights reserved.</p>
+          <p>{t.footer.copyright}</p> {/* Use translation */}
         </div>
       </div>
     </footer>

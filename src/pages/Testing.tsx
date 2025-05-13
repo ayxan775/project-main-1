@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Microscope, BarChart, CheckCircle, ClipboardCheck, Download, ArrowRight, Beaker, FlaskConical, FileText, Gauge } from 'lucide-react';
 import Link from 'next/link';
 import { TestingAnalytics } from '../components/TestingAnalytics';
 import { TestingDetails } from '../components/TestingDetails';
+
+// Import translations for potential future use, though current content is hardcoded
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
+
 
 // Stats shown in the testing page
 const testingStats = [
@@ -71,6 +79,16 @@ const testingServices = [
 
 export function Testing() {
   const [selectedService, setSelectedService] = useState<typeof testingServices[0] | null>(null);
+  const router = useRouter();
+  const { locale, asPath } = router;
+
+  // Determine translations - though current title/desc are from page content
+  // const t = locale === 'az' ? az : locale === 'ru' ? ru : en;
+
+  const pageTitle = "Advanced Testing Services | AzPort Supply";
+  const pageDescription = "Our state-of-the-art laboratory provides comprehensive testing services to ensure your products meet the highest quality and safety standards.";
+  const siteUrl = 'https://azportsupply.com';
+  const canonicalUrl = `${siteUrl}${asPath}`;
   
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -96,10 +114,19 @@ export function Testing() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 min-h-screen pt-20">
-      <TestingAnalytics page="testing" />
-      
-      {/* Hero Section */}
+    <>
+      <Head>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+      </Head>
+      <div className="bg-white dark:bg-gray-900 min-h-screen pt-20">
+        <TestingAnalytics page="testing" />
+        
+        {/* Hero Section */}
       <section className="relative py-24 bg-blue-50 dark:bg-blue-900/20 overflow-hidden">
         <div className="absolute inset-0 opacity-20 dark:opacity-10">
           <svg className="absolute left-0 top-0 h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="#2563eb">
@@ -379,5 +406,6 @@ export function Testing() {
         )}
       </AnimatePresence>
     </div>
+    </>
   );
-} 
+}

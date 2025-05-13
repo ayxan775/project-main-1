@@ -1,6 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Microscope, FileText, CheckCircle, Calendar, ArrowLeft, Download, ClipboardList, Clock, Beaker } from 'lucide-react';
+import { useRouter } from 'next/router'; // Import useRouter
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 interface TestingDetailsProps {
   service: {
@@ -17,26 +23,30 @@ interface TestingDetailsProps {
 }
 
 export function TestingDetails({ service, onClose }: TestingDetailsProps) {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az.testingDetails : locale === 'ru' ? ru.testingDetails : en.testingDetails; // Select translations
+
   const {
-    name,
-    description,
+    name, // Comes from props
+    description, // Comes from props
     icon,
-    turnaround,
-    methodology = 'Our laboratory employs industry-standard testing methodologies in accordance with international standards and specifications.',
-    equipment = [
-      'Scanning Electron Microscope (SEM)',
-      'X-Ray Fluorescence (XRF) Analyzer',
-      'Fourier Transform Infrared Spectroscopy (FTIR)',
-      'Universal Testing Machine',
-      'Gas Chromatography-Mass Spectrometry (GC-MS)'
+    turnaround, // Comes from props
+    methodology = t.defaultMethodology, // Use translated default
+    equipment = [ // Use translated defaults
+      t.defaultEquipment1,
+      t.defaultEquipment2,
+      t.defaultEquipment3,
+      t.defaultEquipment4,
+      t.defaultEquipment5
     ],
-    standardsCompliance = [
-      'ASTM International Standards',
-      'ISO Testing Standards',
-      'European Committee for Standardization (CEN)',
-      'International Electrotechnical Commission (IEC)'
+    standardsCompliance = [ // Use translated defaults
+      t.defaultStandard1,
+      t.defaultStandard2,
+      t.defaultStandard3,
+      t.defaultStandard4
     ],
-    sampleRequirements = 'Minimum sample size of 100g. Samples should be clearly labeled and accompanied by detailed specifications and testing requirements.'
+    sampleRequirements = t.defaultSampleReq // Use translated default
   } = service;
 
   return (
@@ -72,40 +82,40 @@ export function TestingDetails({ service, onClose }: TestingDetailsProps) {
               {icon}
             </div>
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white text-center">{name}</h2>
-            <p className="text-blue-600 dark:text-blue-400 font-medium mt-2">Testing Service Details</p>
+            <p className="text-blue-600 dark:text-blue-400 font-medium mt-2">{t.modalSubtitle}</p> {/* Use translation */}
           </div>
-          
+
           <div className="p-6 md:p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
                 <div className="flex items-center mb-2">
                   <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Turnaround Time</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{t.labelTurnaround}</h3> {/* Use translation */}
                 </div>
                 <p className="text-gray-600 dark:text-gray-300">{turnaround}</p>
               </div>
-              
+
               <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
                 <div className="flex items-center mb-2">
                   <ClipboardList className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Sample Requirements</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{t.labelSampleReq}</h3> {/* Use translation */}
                 </div>
                 <p className="text-gray-600 dark:text-gray-300">{sampleRequirements}</p>
               </div>
             </div>
             
             <div className="mb-8">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Testing Description</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.titleDescription}</h3> {/* Use translation */}
               <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{description}</p>
             </div>
-            
+
             <div className="mb-8">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Methodology</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.titleMethodology}</h3> {/* Use translation */}
               <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{methodology}</p>
             </div>
-            
+
             <div className="mb-8">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Testing Equipment</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.titleEquipment}</h3> {/* Use translation */}
               <ul className="space-y-2">
                 {equipment.map((item, index) => (
                   <li key={index} className="flex items-start">
@@ -115,9 +125,9 @@ export function TestingDetails({ service, onClose }: TestingDetailsProps) {
                 ))}
               </ul>
             </div>
-            
+
             <div className="mb-8">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Standards Compliance</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.titleStandards}</h3> {/* Use translation */}
               <ul className="space-y-2">
                 {standardsCompliance.map((standard, index) => (
                   <li key={index} className="flex items-start">
@@ -134,7 +144,7 @@ export function TestingDetails({ service, onClose }: TestingDetailsProps) {
                 whileTap={{ scale: 0.98 }}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center shadow-md"
               >
-                Request Testing Quote
+                {t.buttonRequestQuote} {/* Use translation */}
                 <Download className="ml-2 h-5 w-5" />
               </motion.button>
             </div>

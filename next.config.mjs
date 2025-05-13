@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  i18n: {
+    locales: ['en', 'az', 'ru'], // Supported locales
+    defaultLocale: 'en', // Default locale
+  },
   // Use serverComponentsExternalPackages to tell Next.js which packages
   // should be treated as server-only modules
   experimental: {

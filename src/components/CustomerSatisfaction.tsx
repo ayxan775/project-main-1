@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Zap, 
+import { useRouter } from 'next/router'; // Import useRouter
+import {
+  Zap,
   Shield, 
   Leaf, 
   Lightbulb, 
@@ -9,7 +10,16 @@ import {
   CheckCircle 
 } from 'lucide-react';
 
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
+
 export function CustomerSatisfaction() {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az.customerSatisfaction : locale === 'ru' ? ru.customerSatisfaction : en.customerSatisfaction; // Select translations
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -34,35 +44,36 @@ export function CustomerSatisfaction() {
     }
   };
 
+  // Use translations for priority data
   const priorities = [
     {
-      title: "Efficiency",
-      description: "Optimizing operations and processes for maximum productivity and resource utilization.",
+      title: t.card1Title,
+      description: t.card1Desc,
       icon: <Zap className="w-8 h-8 text-blue-500" />
     },
     {
-      title: "Reliability",
-      description: "Delivering consistent, dependable solutions that you can count on, every time.",
+      title: t.card2Title,
+      description: t.card2Desc,
       icon: <Shield className="w-8 h-8 text-indigo-500" />
     },
     {
-      title: "Sustainability",
-      description: "Implementing eco-friendly practices and solutions for a better tomorrow.",
+      title: t.card3Title,
+      description: t.card3Desc,
       icon: <Leaf className="w-8 h-8 text-green-500" />
     },
     {
-      title: "Innovation",
-      description: "Embracing cutting-edge technologies and creative solutions to stay ahead.",
+      title: t.card4Title,
+      description: t.card4Desc,
       icon: <Lightbulb className="w-8 h-8 text-yellow-500" />
     },
     {
-      title: "Risk Management",
-      description: "Proactive identification and mitigation of potential challenges and risks.",
+      title: t.card5Title,
+      description: t.card5Desc,
       icon: <AlertTriangle className="w-8 h-8 text-red-500" />
     },
     {
-      title: "Compliance",
-      description: "Adhering to industry standards and regulatory requirements with precision.",
+      title: t.card6Title,
+      description: t.card6Desc,
       icon: <CheckCircle className="w-8 h-8 text-purple-500" />
     }
   ];
@@ -91,13 +102,13 @@ export function CustomerSatisfaction() {
             viewport={{ once: true }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            Customer Satisfaction
+            {t.badge} {/* Use translation */}
           </motion.span>
           <h2 className="text-5xl lg:text-6xl font-bold mb-8 dark:text-white">
-            Our Priority, <span className="bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-300 bg-clip-text text-transparent">Your Peace of Mind</span>
+            {t.heading1} <span className="bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-300 bg-clip-text text-transparent">{t.heading2}</span> {/* Use translation */}
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            We're committed to excellence in every aspect of our service delivery, ensuring your success through our comprehensive approach
+            {t.subtitle} {/* Use translation */}
           </p>
         </motion.div>
 

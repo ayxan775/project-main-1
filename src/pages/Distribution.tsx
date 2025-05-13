@@ -1,9 +1,27 @@
 import React from 'react';
+import Head from 'next/head';
 import { motion } from 'framer-motion';
-import { Truck, Package2, Globe, Clock, Shield, MapPin } from 'lucide-react';
+import { Truck, Package2, Globe, Clock, Shield } from 'lucide-react';
 import { Contact } from '../components/Contact';
+import { useRouter } from 'next/router';
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 export function Distribution() {
+  const router = useRouter();
+  const { locale } = router;
+
+  // Determine translations based on current locale
+  const t = locale === 'az' ? az.distributionPageContent : locale === 'ru' ? ru.distributionPageContent : en.distributionPageContent;
+  const tGlobal = locale === 'az' ? az : locale === 'ru' ? ru : en; // For header.navDistribution
+  const pageTitle = `${tGlobal.header.navDistribution} | AzPort Supply`;
+  const pageDescription = t.heroSubtitle;
+  const siteUrl = 'https://azportsupply.com'; // Ensure this is your correct domain
+  const canonicalUrl = `${siteUrl}${router.asPath}`;
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -30,35 +48,44 @@ export function Distribution() {
   const distributionFeatures = [
     {
       icon: <Shield className="h-6 w-6" />,
-      title: "Official Balflex Representative",
-      description: "Authorized distributor providing genuine Balflex products and solutions"
+      title: t.feature1Title,
+      description: t.feature1Desc
     },
     {
       icon: <Package2 className="h-6 w-6" />,
-      title: "Comprehensive Supply Chain",
-      description: "End-to-end supply chain management tailored to your business needs"
+      title: t.feature2Title,
+      description: t.feature2Desc
     },
     {
       icon: <Globe className="h-6 w-6" />,
-      title: "Global Sourcing",
-      description: "Direct access to Balflex's international product portfolio"
+      title: t.feature3Title,
+      description: t.feature3Desc
     },
     {
       icon: <Clock className="h-6 w-6" />,
-      title: "Efficient Operations",
-      description: "Streamlined processes ensuring timely delivery and optimal inventory management"
+      title: t.feature4Title,
+      description: t.feature4Desc
     },
     {
       icon: <Truck className="h-6 w-6" />,
-      title: "Reliable Distribution",
-      description: "Strategic distribution network covering all major industrial areas"
+      title: t.feature5Title,
+      description: t.feature5Desc
     }
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-900 min-h-screen pt-20">
-      {/* Hero Section */}
-      <section className="relative py-24 bg-blue-50 dark:bg-blue-900/20 overflow-hidden">
+    <>
+      <Head>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+      </Head>
+      <div className="bg-white dark:bg-gray-900 min-h-screen pt-20">
+        {/* Hero Section */}
+        <section className="relative py-24 bg-blue-50 dark:bg-blue-900/20 overflow-hidden">
         <div className="absolute inset-0 opacity-20 dark:opacity-10">
           <svg className="absolute left-0 top-0 h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="#2563eb">
             <path d="M0 .5H31.5V32" />
@@ -74,13 +101,13 @@ export function Distribution() {
             className="text-center max-w-3xl mx-auto"
           >
             <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-sm uppercase font-bold tracking-wider py-1 px-3 rounded-full mb-6 inline-block">
-              Official Balflex Representative
+              {t.heroBadge}
             </span>
             <h1 className="text-4xl md:text-5xl font-bold mb-6 dark:text-white">
-              Complete Supply Chain Solutions
+              {t.heroHeading}
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed mb-8">
-              At AzPort Supply, we offer comprehensive supply chain services designed to streamline operations and drive efficiency at every stage of the process
+              {t.heroSubtitle}
             </p>
           </motion.div>
         </div>
@@ -119,9 +146,9 @@ export function Distribution() {
       <section className="py-20 bg-gray-50 dark:bg-gray-800">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold mb-6 dark:text-white">Supply Chain Excellence</h2>
+            <h2 className="text-3xl font-bold mb-6 dark:text-white">{t.excellenceHeading}</h2>
             <p className="text-gray-600 dark:text-gray-300">
-              Our tailored solutions are crafted to meet the unique needs of your business, ensuring smooth and reliable supply chain management from start to finish
+              {t.excellenceSubtitle}
             </p>
           </div>
           
@@ -132,22 +159,22 @@ export function Distribution() {
                 <div className="bg-blue-100 dark:bg-blue-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Package2 className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2 dark:text-white">Sourcing</h3>
-                <p className="text-gray-600 dark:text-gray-300">Direct access to genuine Balflex products</p>
+                <h3 className="text-lg font-semibold mb-2 dark:text-white">{t.processSourcingTitle}</h3>
+                <p className="text-gray-600 dark:text-gray-300">{t.processSourcingDesc}</p>
               </div>
               <div className="text-center">
                 <div className="bg-blue-100 dark:bg-blue-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Truck className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2 dark:text-white">Distribution</h3>
-                <p className="text-gray-600 dark:text-gray-300">Efficient delivery and logistics management</p>
+                <h3 className="text-lg font-semibold mb-2 dark:text-white">{t.processDistributionTitle}</h3>
+                <p className="text-gray-600 dark:text-gray-300">{t.processDistributionDesc}</p>
               </div>
               <div className="text-center">
                 <div className="bg-blue-100 dark:bg-blue-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Shield className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2 dark:text-white">Support</h3>
-                <p className="text-gray-600 dark:text-gray-300">Expert technical assistance and after-sales service</p>
+                <h3 className="text-lg font-semibold mb-2 dark:text-white">{t.processSupportTitle}</h3>
+                <p className="text-gray-600 dark:text-gray-300">{t.processSupportDesc}</p>
               </div>
             </div>
           </div>
@@ -157,5 +184,6 @@ export function Distribution() {
       {/* Contact Section */}
       <Contact />
     </div>
+    </>
   );
-} 
+}

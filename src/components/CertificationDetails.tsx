@@ -1,6 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, FileText, CheckCircle, Calendar, ArrowLeft, Download } from 'lucide-react';
+import { useRouter } from 'next/router'; // Import useRouter
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 interface CertificationDetailsProps {
   certification: {
@@ -18,21 +24,25 @@ interface CertificationDetailsProps {
 }
 
 export function CertificationDetails({ certification, onClose }: CertificationDetailsProps) {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az.certificationDetails : locale === 'ru' ? ru.certificationDetails : en.certificationDetails; // Select translations
+
   const {
-    name,
-    description,
+    name, // Comes from props, potentially needs translation at source
+    description, // Comes from props, potentially needs translation at source
     icon,
     validUntil,
-    issuer = 'International Standards Organization',
-    issueDate = 'January 2023',
-    certificationNumber = 'ISO-9001-2023-12345',
-    scope = 'Supply Chain Management, Logistics, Warehousing',
-    requirements = [
-      'Quality Management System Documentation',
-      'Management Responsibility',
-      'Resource Management',
-      'Product Realization',
-      'Measurement, Analysis, and Improvement'
+    issuer = t.defaultIssuer, // Use translated default
+    issueDate = t.defaultIssueDate, // Use translated default
+    certificationNumber = t.defaultCertNumber, // Use translated default
+    scope = t.defaultScope, // Use translated default
+    requirements = [ // Use translated defaults
+      t.defaultReq1,
+      t.defaultReq2,
+      t.defaultReq3,
+      t.defaultReq4,
+      t.defaultReq5
     ]
   } = certification;
 
@@ -69,56 +79,56 @@ export function CertificationDetails({ certification, onClose }: CertificationDe
               {icon}
             </div>
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white text-center">{name}</h2>
-            <p className="text-blue-600 dark:text-blue-400 font-medium mt-2">Certification Details</p>
+            <p className="text-blue-600 dark:text-blue-400 font-medium mt-2">{t.modalSubtitle}</p> {/* Use translation */}
           </div>
-          
+
           <div className="p-6 md:p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
                 <div className="flex items-center mb-2">
                   <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Issue Date</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{t.labelIssueDate}</h3> {/* Use translation */}
                 </div>
                 <p className="text-gray-600 dark:text-gray-300">{issueDate}</p>
               </div>
-              
+
               <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
                 <div className="flex items-center mb-2">
                   <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Valid Until</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{t.labelValidUntil}</h3> {/* Use translation */}
                 </div>
                 <p className="text-gray-600 dark:text-gray-300">{validUntil}</p>
               </div>
-              
+
               <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
                 <div className="flex items-center mb-2">
                   <ShieldCheck className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Issuing Body</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{t.labelIssuer}</h3> {/* Use translation */}
                 </div>
                 <p className="text-gray-600 dark:text-gray-300">{issuer}</p>
               </div>
-              
+
               <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
                 <div className="flex items-center mb-2">
                   <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Certificate Number</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{t.labelCertNumber}</h3> {/* Use translation */}
                 </div>
                 <p className="text-gray-600 dark:text-gray-300">{certificationNumber}</p>
               </div>
             </div>
             
             <div className="mb-8">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Description</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.titleDescription}</h3> {/* Use translation */}
               <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{description}</p>
             </div>
-            
+
             <div className="mb-8">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Scope of Certification</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.titleScope}</h3> {/* Use translation */}
               <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{scope}</p>
             </div>
-            
+
             <div className="mb-8">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Certification Requirements</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t.titleRequirements}</h3> {/* Use translation */}
               <ul className="space-y-2">
                 {requirements.map((requirement, index) => (
                   <li key={index} className="flex items-start">
@@ -135,7 +145,7 @@ export function CertificationDetails({ certification, onClose }: CertificationDe
                 whileTap={{ scale: 0.98 }}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center shadow-md"
               >
-                Download Certificate
+                {t.buttonDownload} {/* Use translation */}
                 <Download className="ml-2 h-5 w-5" />
               </motion.button>
             </div>

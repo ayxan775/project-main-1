@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Send, MessageSquare, Clock, Map, X, Facebook, Instagram, Linkedin } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/router'; // Import useRouter
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 interface ContactFormData {
   name: string;
@@ -17,12 +23,20 @@ interface ContactProps {
 }
 
 export function Contact({ isModal, modalTitle, initialValues, onClose }: ContactProps) {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'az' ? az.contact : locale === 'ru' ? ru.contact : en.contact; // Select translations
+
   const [formData, setFormData] = useState<ContactFormData>(initialValues || {
     name: '',
     email: '',
     subject: '',
     message: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
+  const [submitMessage, setSubmitMessage] = useState('');
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -32,25 +46,43 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would handle form submission, including SMTP logic
-    console.log('Form submitted:', formData);
-    
-    // Show success message
-    alert('Your message has been sent! We will contact you shortly.');
-    
-    // Reset form
-    setFormData({
-      name: '',
-      email: '',
-      subject: '',
-      message: ''
-    });
-    
-    // Close modal if in modal mode
-    if (isModal && onClose) {
-      onClose();
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+    setSubmitMessage('');
+
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        setSubmitMessage(result.message || t.alertSuccess); // Use server message or default
+        setFormData({ name: '', email: '', subject: '', message: '' }); // Reset form
+        if (isModal && onClose) {
+          // Optionally delay closing modal to show success message
+          setTimeout(() => {
+            onClose();
+          }, 2000);
+        }
+      } else {
+        setSubmitStatus('error');
+        setSubmitMessage(result.error || t.alertError || 'An unexpected error occurred.');
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+      setSubmitStatus('error');
+      setSubmitMessage(t.alertError || 'Failed to send message. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -81,9 +113,9 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
     return (
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{modalTitle || 'Contact Us'}</h3>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{modalTitle || t.modalDefaultTitle}</h3> {/* Use translation */}
           {onClose && (
-            <button 
+            <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
@@ -94,7 +126,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelName}</label> {/* Use translation */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -107,14 +139,14 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 value={formData.name}
                 onChange={handleInputChange}
                 className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                placeholder="Your name"
+                placeholder={t.placeholderName} // Use translation
                 required
               />
             </div>
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelEmail}</label> {/* Use translation */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Mail className="h-5 w-5 text-gray-400" />
@@ -125,14 +157,14 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 value={formData.email}
                 onChange={handleInputChange}
                 className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                placeholder="your.email@example.com"
+                placeholder={t.placeholderEmail} // Use translation
                 required
               />
             </div>
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subject</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelSubject}</label> {/* Use translation */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <MessageSquare className="h-5 w-5 text-gray-400" />
@@ -143,21 +175,21 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 value={formData.subject}
                 onChange={handleInputChange}
                 className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                placeholder="How can we help?"
+                placeholder={t.placeholderSubject} // Use translation
                 required
               />
             </div>
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Message</label>
-            <textarea 
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelMessage}</label> {/* Use translation */}
+            <textarea
               rows={4}
               name="message"
               value={formData.message}
               onChange={handleInputChange}
               className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-              placeholder="Your message here..."
+              placeholder={t.placeholderMessage} // Use translation
               required
             ></textarea>
           </div>
@@ -168,12 +200,30 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
           >
             <button 
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-3 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center space-x-2"
+              disabled={isSubmitting}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-3 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>Send Message</span>
-              <Send className="h-5 w-5 ml-2" />
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {t.buttonSending || 'Sending...'}
+                </>
+              ) : (
+                <>
+                  <span>{t.buttonSend}</span> {/* Use translation */}
+                  <Send className="h-5 w-5 ml-2" />
+                </>
+              )}
             </button>
           </motion.div>
+          {submitMessage && (
+            <div className={`mt-4 p-3 rounded-md text-sm ${submitStatus === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'}`}>
+              {submitMessage}
+            </div>
+          )}
         </form>
       </div>
     );
@@ -201,12 +251,12 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
             transition={{ duration: 0.6, delay: 0.2 }}
             className="inline-block"
           >
-            <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-sm uppercase font-bold tracking-wider py-1 px-3 rounded-full mb-3 inline-block">Contact Us</span>
+            <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-sm uppercase font-bold tracking-wider py-1 px-3 rounded-full mb-3 inline-block">{t.pageBadge}</span> {/* Use translation */}
           </motion.div>
           <h2 className="text-4xl md:text-5xl font-bold mb-6 dark:text-white relative">
             <span className="relative">
-              Have Questions? 
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400 ml-3">Get in Touch!</span>
+              {t.pageHeading1} {/* Use translation */}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400 ml-3">{t.pageHeading2}</span> {/* Use translation */}
               <motion.div 
                 className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-blue-600/50 to-blue-400/50 rounded-full"
                 initial={{ width: "0%" }}
@@ -223,7 +273,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            We're here to assist you with any questions about our hydraulic solutions
+            {t.pageSubtitle} {/* Use translation */}
           </motion.p>
         </motion.div>
         
@@ -240,9 +290,9 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 className="text-2xl font-bold mb-8 dark:text-white"
                 variants={itemVariants}
               >
-                Contact Information
+                {t.infoTitle} {/* Use translation */}
               </motion.h3>
-              
+
               <motion.div className="space-y-6" variants={itemVariants}>
                 <motion.div 
                   className="flex items-start space-x-4 group"
@@ -253,7 +303,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                     <Phone className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">Phone</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{t.infoLabelPhone}</h4> {/* Use translation */}
                     <a href="tel:+99412311418" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                       +994 12 311 14 18
                     </a>
@@ -269,7 +319,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                     <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">Email</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{t.infoLabelEmail}</h4> {/* Use translation */}
                     <a href="mailto:Sales@azportsupply.com" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                       Sales@azportsupply.com
                     </a>
@@ -285,7 +335,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                     <MapPin className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">Location</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{t.infoLabelLocation}</h4> {/* Use translation */}
                     <p className="text-gray-600 dark:text-gray-300">
                       Chinar Park Business Center, Baku
                     </p>
@@ -301,19 +351,19 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                     <Clock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">Business Hours</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{t.infoLabelHours}</h4> {/* Use translation */}
                     <p className="text-gray-600 dark:text-gray-300">
-                      Mon-Fri: 9:00 AM - 6:00 PM<br />
-                      Sat: 10:00 AM - 2:00 PM
+                      {t.infoHoursLine1}<br /> {/* Use translation */}
+                      {t.infoHoursLine2} {/* Use translation */}
                     </p>
                   </div>
                 </motion.div>
 
                 <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Follow Us</h4>
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4">{t.infoLabelFollow}</h4> {/* Use translation */}
                   <div className="flex space-x-4">
-                    <a 
-                      href="https://www.facebook.com/profile.php?id=61575970508290" 
+                    <a
+                      href="https://www.facebook.com/profile.php?id=61575970508290"
                       target="_blank" 
                       rel="noopener noreferrer" 
                       className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
@@ -351,12 +401,12 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 className="text-2xl font-bold mb-8 dark:text-white"
                 variants={itemVariants}
               >
-                Send Us a Message
+                {t.formTitle} {/* Use translation */}
               </motion.h3>
-              
+
               <motion.form className="space-y-6" variants={itemVariants} onSubmit={handleSubmit}>
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelName}</label> {/* Use translation */}
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -369,14 +419,14 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                       value={formData.name}
                       onChange={handleInputChange}
                       className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                      placeholder="Your name"
+                      placeholder={t.placeholderName} // Use translation
                       required
                     />
                   </div>
                 </motion.div>
                 
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelEmail}</label> {/* Use translation */}
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Mail className="h-5 w-5 text-gray-400" />
@@ -387,14 +437,14 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                       value={formData.email}
                       onChange={handleInputChange}
                       className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                      placeholder="your.email@example.com"
+                      placeholder={t.placeholderEmail} // Use translation
                       required
                     />
                   </div>
                 </motion.div>
                 
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subject</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelSubject}</label> {/* Use translation */}
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <MessageSquare className="h-5 w-5 text-gray-400" />
@@ -405,21 +455,21 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                       value={formData.subject}
                       onChange={handleInputChange}
                       className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                      placeholder="How can we help?"
+                      placeholder={t.placeholderSubject} // Use translation
                       required
                     />
                   </div>
                 </motion.div>
                 
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Message</label>
-                  <textarea 
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelMessage}</label> {/* Use translation */}
+                  <textarea
                     rows={5}
                     name="message"
                     value={formData.message}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                    placeholder="Your message here..."
+                    placeholder={t.placeholderMessage} // Use translation
                     required
                   ></textarea>
                 </motion.div>
@@ -432,12 +482,33 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 >
                   <button 
                     type="submit"
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-4 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center space-x-2"
+                    disabled={isSubmitting}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-4 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <span>Send Message</span>
-                    <Send className="h-5 w-5" />
+                     {isSubmitting ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          {t.buttonSending || 'Sending...'}
+                        </>
+                      ) : (
+                        <>
+                          <span>{t.buttonSend}</span> {/* Use translation */}
+                          <Send className="h-5 w-5" />
+                        </>
+                      )}
                   </button>
                 </motion.div>
+                 {submitMessage && (
+                  <motion.div
+                    variants={itemVariants}
+                    className={`mt-4 p-3 rounded-md text-sm ${submitStatus === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'}`}
+                  >
+                    {submitMessage}
+                  </motion.div>
+                )}
               </motion.form>
             </div>
           </motion.div>
@@ -463,17 +534,17 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
             </div>
             <div className="absolute inset-0 bg-blue-900/10 flex flex-col items-center justify-center p-4">
               <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-6 rounded-xl shadow-2xl transform hover:-translate-y-1 transition-transform duration-300 max-w-md w-full">
-                <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">Visit Our Office</h3>
-                <p className="text-gray-700 dark:text-gray-300 mb-4">Come by and see our products in person at our main location in Baku.</p>
+                <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{t.mapOverlayTitle}</h3> {/* Use translation */}
+                <p className="text-gray-700 dark:text-gray-300 mb-4">{t.mapOverlayText}</p> {/* Use translation */}
                 <div className="flex items-center">
                   <Map className="h-5 w-5 text-blue-600 mr-2" />
-                  <a 
-                    href="https://www.google.com/maps/place/Azport+Supply+MMC/@40.4147864,49.8564398,17z/data=!3m1!4b1!4m6!3m5!1s0x40307d1f08d751e5:0x682d37b49a753e5a!8m2!3d40.4147823!4d49.8590147!16s%2Fg%2F11lp0z4mdk" 
-                    target="_blank" 
+                  <a
+                    href="https://www.google.com/maps/place/Azport+Supply+MMC/@40.4147864,49.8564398,17z/data=!3m1!4b1!4m6!3m5!1s0x40307d1f08d751e5:0x682d37b49a753e5a!8m2!3d40.4147823!4d49.8590147!16s%2Fg%2F11lp0z4mdk"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 font-medium hover:underline"
                   >
-                    Get Directions
+                    {t.mapLink} {/* Use translation */}
                   </a>
                 </div>
               </div>

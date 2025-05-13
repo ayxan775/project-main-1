@@ -2,7 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronRight, FileText, Heart } from 'lucide-react';
 import { Product } from '../types';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/router'; // Already imported, but good to note
+
+// Import translations
+import en from '../../locales/en.json';
+import az from '../../locales/az.json';
+import ru from '../../locales/ru.json';
 
 export function HomeProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -10,7 +15,9 @@ export function HomeProducts() {
   const [error, setError] = useState<string | null>(null);
   const [displayLimit, setDisplayLimit] = useState<number>(6);
   const [isFavorite, setIsFavorite] = useState<Record<number, boolean>>({});
-  const router = useRouter();
+  const router = useRouter(); // Already initialized
+  const { locale } = router;
+  const t = locale === 'az' ? az.homeProducts : locale === 'ru' ? ru.homeProducts : en.homeProducts; // Select translations
 
   // Fetch products from API
   useEffect(() => {
@@ -21,21 +28,23 @@ export function HomeProducts() {
         const response = await fetch('/api/products');
         
         if (!response.ok) {
-          throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`);
+          // Keep the detailed error for console, but show generic translated one to user
+          console.error(`Failed to fetch products: ${response.status} ${response.statusText}`);
+          throw new Error(t.errorFetch); // Use translation
         }
-        
+
         const data = await response.json();
         setProducts(data);
       } catch (error) {
         console.error('Error fetching products:', error);
-        setError(error instanceof Error ? error.message : 'Failed to fetch products');
+        setError(error instanceof Error ? error.message : t.errorFetch); // Use translation
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchProducts();
-  }, []);
+  }, [locale]); // Re-fetch if locale changes
 
   // Toggle favorite status
   const toggleFavorite = (id: number, event: React.MouseEvent) => {
@@ -117,7 +126,7 @@ export function HomeProducts() {
             <button
               className="flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold group"
             >
-              View Details 
+              {t.buttonViewDetails} {/* Use translation */}
               <ChevronRight className="h-4 w-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -131,10 +140,10 @@ export function HomeProducts() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Featured Products
+            {t.title} {/* Use translation */}
           </h2>
           <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Discover our range of high-quality industrial products designed to meet your needs
+            {t.subtitle} {/* Use translation */}
           </p>
         </div>
 
@@ -162,7 +171,7 @@ export function HomeProducts() {
               onClick={() => setDisplayLimit(prev => prev + 6)}
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center"
             >
-              Load More Products
+              {t.buttonLoadMore} {/* Use translation */}
               <ChevronRight className="ml-2 h-5 w-5" />
             </motion.button>
           </div>
@@ -176,7 +185,7 @@ export function HomeProducts() {
             onClick={() => router.push('/products')}
             className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center"
           >
-            View All Products
+            {t.buttonViewAll} {/* Use translation */}
             <ChevronRight className="ml-2 h-5 w-5" />
           </motion.button>
         </div>
