@@ -173,7 +173,8 @@
     "uploadedStateText": "Click to replace document",
     "dropzoneActive": "Drop the document here...",
     "dropzoneInactive": "Drag & drop document here, or click to select",
-    "dropzoneHint": "Supported formats: PDF, Word, Excel, Text (max {size}MB)"
+    "dropzoneHint": "Supported formats: PDF, Word, Excel, Text (max {size}MB)",
+    "errorReadFail": "Failed to read file. Please try again."
   },
   "hero": {
     "badge": "Welcome to AzPort Supply",

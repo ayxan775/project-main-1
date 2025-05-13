@@ -8,6 +8,19 @@ import en from '../../locales/en.json';
 import az from '../../locales/az.json';
 import ru from '../../locales/ru.json';
 
+// Define an interface for the documentUpload translation keys
+interface DocumentUploadTranslations {
+  errorSize: string;
+  errorType: string;
+  fallbackFilename: string;
+  uploadedStateText: string;
+  dropzoneActive: string;
+  dropzoneInactive: string;
+  dropzoneHint: string;
+  errorReadFail?: string; // Optional as it might not be in all locale files initially
+  // Add any other keys that are part of your documentUpload translations
+}
+
 interface DocumentUploadProps {
   document: string | null;
   onDocumentChange: (document: string) => void;
@@ -21,7 +34,7 @@ export function DocumentUpload({
 }: DocumentUploadProps) {
   const router = useRouter();
   const { locale } = router;
-  const t = locale === 'az' ? az.documentUpload : locale === 'ru' ? ru.documentUpload : en.documentUpload; // Select translations
+  const t = (locale === 'az' ? az.documentUpload : locale === 'ru' ? ru.documentUpload : en.documentUpload) as DocumentUploadTranslations; // Select and cast translations
 
   const [error, setError] = React.useState<string | null>(null);
 
@@ -68,7 +81,7 @@ export function DocumentUpload({
       console.error('FileReader error:', reader.error);
     };
     reader.readAsDataURL(file);
-  }, [maxSize, onDocumentChange, t.errorReadFail]);
+  }, [maxSize, onDocumentChange, t]); // Updated dependency array for t
 
   // Setup dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

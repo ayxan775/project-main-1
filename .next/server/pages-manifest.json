@@ -4,5 +4,9 @@
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
   "/test345": "pages/test345.js",
-  "/contact": "pages/contact.js"
+  "/contact": "pages/contact.js",
+  "/api/auth/verify": "pages/api/auth/verify.js",
+  "/api/products": "pages/api/products.js",
+  "/api/categories": "pages/api/categories.js",
+  "/api/send-email": "pages/api/send-email.js"
 }
