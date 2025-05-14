@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import * as nodemailer from 'nodemailer';
 import axios from 'axios';
 import querystring from 'querystring';
 
@@ -33,7 +32,7 @@ export default async function handler(
     const tokenRequestBody = {
       client_id: oauthClientId,
       client_secret: oauthClientSecret,
-      scope: 'https://outlook.office.com/.default',
+      scope: 'https://graph.microsoft.com/.default',
       grant_type: 'client_credentials',
     };
 
@@ -50,38 +49,51 @@ export default async function handler(
     accessToken = tokenResponse.data.access_token;
     console.log('Successfully fetched OAuth2 access token for test email.');
     
-    console.log('Creating test email transporter with OAuth2...');
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.office365.com',
-      port: 587,
-      secure: false,
-      auth: {
-        type: 'OAuth2',
-        user: oauthUserEmail,
-        clientId: oauthClientId,
-        clientSecret: oauthClientSecret,
-        accessToken: accessToken,
+    console.log('Sending test email via Microsoft Graph API...');
+    
+    const graphEndpoint = 'https://graph.microsoft.com/v1.0/users/' + oauthUserEmail + '/sendMail';
+    
+    const emailBody = {
+      message: {
+        subject: 'Test Email from App',
+        body: {
+          contentType: 'HTML',
+          content: '<p>This is a test email sent from the application to verify email functionality.</p>'
+        },
+        toRecipients: [
+          {
+            emailAddress: {
+              address: receiverEmail
+            }
+          }
+        ]
       },
-      debug: true,
-      logger: true
+      saveToSentItems: false
+    };
+    
+    await axios.post(graphEndpoint, emailBody, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
     });
     
-    console.log('Sending test email with OAuth2...');
-    await transporter.sendMail({
-      from: oauthUserEmail,
-      to: receiverEmail,
-      subject: 'Test Email from App',
-      text: 'This is a test email sent from the application to verify email functionality.',
-      html: '<p>This is a test email sent from the application to verify email functionality.</p>'
-    });
-    
-    console.log('Test email sent successfully!');
+    console.log('Test email sent successfully via Graph API!');
     return res.status(200).json({ success: true, message: 'Test email sent!' });
-  } catch (error) {
-    console.error('Test email error:', error);
+  } catch (error: any) {
+    console.error('Test email error:');
+    if (error.response) {
+      console.error('Status:', error.response.status);
+      console.error('Data:', JSON.stringify(error.response.data, null, 2));
+    } else {
+      console.error(error);
+    }
+    
     return res.status(500).json({ 
       error: 'Failed to send test email', 
-      details: error instanceof Error ? error.message : String(error) 
+      details: error.response ? 
+        `API Error: ${error.response.status} - ${JSON.stringify(error.response.data)}` : 
+        (error instanceof Error ? error.message : String(error))
     });
   }
 } 

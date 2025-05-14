@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import * as nodemailer from 'nodemailer';
 import axios from 'axios';
 import querystring from 'querystring';
 
@@ -47,7 +46,7 @@ export default async function handler(
       const tokenRequestBody = {
         client_id: oauthClientId,
         client_secret: oauthClientSecret,
-        scope: 'https://outlook.office.com/.default',
+        scope: 'https://graph.microsoft.com/.default',
         grant_type: 'client_credentials',
       };
 
@@ -73,7 +72,7 @@ export default async function handler(
       console.error('Request Body Sent (client_secret redacted):', {
         client_id: oauthClientId,
         client_secret: '[REDACTED]',
-        scope: 'https://outlook.office.com/.default',
+        scope: 'https://graph.microsoft.com/.default',
         grant_type: 'client_credentials',
       });
       if (tokenError.response) {
@@ -92,71 +91,74 @@ export default async function handler(
     }
     
     try {
-      console.log('Initializing Nodemailer transporter with OAuth2 token...');
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.office365.com',
-        port: 587,
-        secure: false,
-        auth: {
-          type: 'OAuth2',
-          user: oauthUserEmail,
-          clientId: oauthClientId,
-          clientSecret: oauthClientSecret,
-          accessToken: accessToken,
+      console.log('Sending email using Microsoft Graph API...');
+      
+      const graphEndpoint = 'https://graph.microsoft.com/v1.0/users/' + oauthUserEmail + '/sendMail';
+      
+      const emailBody = {
+        message: {
+          subject: `Contact Form: ${subject}`,
+          body: {
+            contentType: 'HTML',
+            content: `
+              <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                <h2 style="color: #333;">New Contact Form Submission</h2>
+                <p><strong>Name:</strong> ${name}</p>
+                <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+                <p><strong>Subject:</strong> ${subject}</p>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                <p><strong>Message:</strong></p>
+                <p style="white-space: pre-wrap; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">${message}</p>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                <p style="font-size: 0.9em; color: #777;">This email was sent from the contact form on your website.</p>
+              </div>
+            `
+          },
+          toRecipients: [
+            {
+              emailAddress: {
+                address: contactFormReceiverEmail
+              }
+            }
+          ],
+          replyTo: [
+            {
+              emailAddress: {
+                address: email,
+                name: name
+              }
+            }
+          ]
         },
-        debug: true, 
-        logger: true 
-      });
-
-      const mailOptions = {
-        from: `"${name}" <${oauthUserEmail}>`,
-        replyTo: email,
-        to: contactFormReceiverEmail,
-        subject: `Contact Form: ${subject}`,
-        text: `You have a new message from ${name} (${email}):\n\n${message}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-            <h2 style="color: #333;">New Contact Form Submission</h2>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
-            <p><strong>Subject:</strong> ${subject}</p>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-            <p><strong>Message:</strong></p>
-            <p style="white-space: pre-wrap; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">${message}</p>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-            <p style="font-size: 0.9em; color: #777;">This email was sent from the contact form on your website.</p>
-          </div>
-        `,
+        saveToSentItems: false
       };
-
-      console.log('Attempting to send email with OAuth2 token...');
-      await transporter.sendMail(mailOptions);
-      console.log('Email sent successfully with OAuth2 token.');
+      
+      await axios.post(graphEndpoint, emailBody, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Email sent successfully with Microsoft Graph API.');
       return res.status(200).json({ success: true, message: 'Email sent successfully!' });
 
     } catch (mailError: any) { 
-      console.error('--- Full Error Object Start (Mail Sending with OAuth2) ---');
+      console.error('--- Full Error Object Start (Graph API Email) ---');
       console.error(mailError); 
-      console.error('--- Full Error Object End (Mail Sending with OAuth2) ---');
+      console.error('--- Full Error Object End (Graph API Email) ---');
 
-      let detailedErrorMessage = 'Unknown error during email sending after obtaining token.';
-      if (mailError instanceof Error) { 
+      let detailedErrorMessage = 'Unknown error during email sending with Graph API.';
+      if (mailError.response) {
+        console.error('Graph API Response Status:', mailError.response.status);
+        console.error('Graph API Response Data:', JSON.stringify(mailError.response.data, null, 2));
+        detailedErrorMessage = `Graph API Error: ${mailError.response.status} - ${JSON.stringify(mailError.response.data)}`;
+      } else if (mailError instanceof Error) { 
         detailedErrorMessage = mailError.message;
       } else if (typeof mailError === 'string') {
         detailedErrorMessage = mailError;
       }
       
-      if (mailError.code) {
-        console.error('Nodemailer Mail Error Code:', mailError.code);
-        detailedErrorMessage += ` | Nodemailer Code: ${mailError.code}`;
-      }
-      if (mailError.responseBody) {
-        console.error('Mail Error Response Body:', mailError.responseBody);
-        detailedErrorMessage += ` | Mail Error Response Body: ${mailError.responseBody}`;
-      }
-      if (mailError.stack) {
-        console.error('Mail Error Stack:', mailError.stack);
-      }
       return res.status(500).json({ error: 'Failed to send email.', details: detailedErrorMessage });
     }
   } else {
