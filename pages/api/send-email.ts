@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import nodemailer from 'nodemailer';
-import axios from 'axios'; // For making HTTP requests to get the token
-import querystring from 'querystring'; // For formatting the token request body
+import * as nodemailer from 'nodemailer';
+import axios from 'axios';
+import querystring from 'querystring';
 
 interface EmailRequestBody {
   name: string;
@@ -42,18 +42,18 @@ export default async function handler(
     let accessToken = '';
 
     try {
-      console.log('Attempting to manually fetch OAuth2 access token...');
+      console.log('Attempting to fetch OAuth2 access token...');
       const tokenUrl = `https://login.microsoftonline.com/${oauthTenantId}/oauth2/v2.0/token`;
       const tokenRequestBody = {
         client_id: oauthClientId,
         client_secret: oauthClientSecret,
-        scope: 'https://graph.microsoft.com/.default',
+        scope: 'https://outlook.office.com/SMTP.Send',
         grant_type: 'client_credentials',
       };
 
       const tokenResponse = await axios.post<OAuthTokenResponse>(
         tokenUrl,
-        querystring.stringify(tokenRequestBody), // Format as x-www-form-urlencoded
+        querystring.stringify(tokenRequestBody),
         {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -65,15 +65,15 @@ export default async function handler(
       if (!accessToken) {
         throw new Error('Access token not found in Microsoft token response.');
       }
-      console.log('Successfully fetched OAuth2 access token manually.');
+      console.log('Successfully fetched OAuth2 access token.');
 
     } catch (tokenError: any) {
-      console.error('--- Error Fetching OAuth2 Token Manually ---');
+      console.error('--- Error Fetching OAuth2 Token ---');
       console.error('Request URL:', `https://login.microsoftonline.com/${oauthTenantId}/oauth2/v2.0/token`);
       console.error('Request Body Sent (client_secret redacted):', {
         client_id: oauthClientId,
         client_secret: '[REDACTED]',
-        scope: 'https://graph.microsoft.com/.default',
+        scope: 'https://outlook.office.com/SMTP.Send',
         grant_type: 'client_credentials',
       });
       if (tokenError.response) {
@@ -91,16 +91,17 @@ export default async function handler(
       }
     }
     
-    // Proceed to send email if token was obtained
     try {
-      console.log('Initializing Nodemailer transporter with manually fetched OAuth2 token...');
+      console.log('Initializing Nodemailer transporter with OAuth2 token...');
       const transporter = nodemailer.createTransport({
         host: 'smtp.office365.com',
         port: 587,
-        secure: false, // STARTTLS
+        secure: false,
         auth: {
           type: 'OAuth2',
           user: oauthUserEmail,
+          clientId: oauthClientId,
+          clientSecret: oauthClientSecret,
           accessToken: accessToken,
         },
         debug: true, 
@@ -128,15 +129,15 @@ export default async function handler(
         `,
       };
 
-      console.log('Attempting to send email with manually obtained token...');
+      console.log('Attempting to send email with OAuth2 token...');
       await transporter.sendMail(mailOptions);
-      console.log('Email sent successfully with manually obtained token.');
+      console.log('Email sent successfully with OAuth2 token.');
       return res.status(200).json({ success: true, message: 'Email sent successfully!' });
 
     } catch (mailError: any) { 
-      console.error('--- Full Error Object Start (Mail Sending with Manual Token) ---');
+      console.error('--- Full Error Object Start (Mail Sending with OAuth2) ---');
       console.error(mailError); 
-      console.error('--- Full Error Object End (Mail Sending with Manual Token) ---');
+      console.error('--- Full Error Object End (Mail Sending with OAuth2) ---');
 
       let detailedErrorMessage = 'Unknown error during email sending after obtaining token.';
       if (mailError instanceof Error) { 
