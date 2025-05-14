@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import nodemailer from 'nodemailer';
+// No longer explicitly importing XOAuth2 as Nodemailer will handle it with service:'Outlook365'
 
 interface EmailRequestBody {
   name: string;
@@ -23,22 +24,27 @@ export default async function handler(
     // OAuth2 Configuration
     const oauthClientId = process.env.OAUTH_CLIENT_ID;
     const oauthClientSecret = process.env.OAUTH_CLIENT_SECRET;
-    // const oauthTenantId = process.env.OAUTH_TENANT_ID; // Available if needed
-    const oauthUserEmail = process.env.OAUTH_USER_EMAIL; // The email address the app will send from
+    // Tenant ID is not directly used in this simplified Nodemailer config,
+    // as 'Outlook365' service implies common Microsoft endpoints.
+    // const oauthTenantId = process.env.OAUTH_TENANT_ID; 
+    const oauthUserEmail = process.env.OAUTH_USER_EMAIL; 
     const contactFormReceiverEmail = process.env.CONTACT_FORM_RECEIVER_EMAIL;
 
     if (!oauthClientId || !oauthClientSecret || !oauthUserEmail || !contactFormReceiverEmail) {
-      console.error('Email configuration environment variables are not fully set.');
+      console.error('Email configuration environment variables are not fully set (Client ID, Client Secret, User Email, Receiver Email).');
       return res.status(500).json({ error: 'Server configuration error for email.', details: 'Required email environment variables missing.' });
     }
 
     const transporter = nodemailer.createTransport({
-      service: 'Outlook365',
+      service: 'Outlook365', // Use the built-in Outlook365 service
       auth: {
         type: 'OAuth2',
-        user: oauthUserEmail,
-        clientId: oauthClientId,
-        clientSecret: oauthClientSecret,
+        user: oauthUserEmail,       // The email address of the account to send from
+        clientId: oauthClientId,    // The Client ID of your registered application
+        clientSecret: oauthClientSecret, // The Client Secret of your registered application
+        // For client credentials flow with 'Outlook365' service, 
+        // Nodemailer should handle token generation and refresh automatically.
+        // No need for explicit accessUrl or refreshToken here usually.
       },
     });
 
@@ -65,24 +71,24 @@ export default async function handler(
     };
 
     try {
+      console.log('Attempting to send email with service:Outlook365 and OAuth2 credentials...');
       await transporter.sendMail(mailOptions);
+      console.log('Email sent successfully with service:Outlook365 and OAuth2.');
       return res.status(200).json({ success: true, message: 'Email sent successfully!' });
-    } catch (err) { // Changed 'error' to 'err' to avoid conflict with global Error
-      const error = err as any; // Cast to any to access dynamic properties for logging
+    } catch (err) { 
+      const error = err as any; 
 
-      console.error('--- Full Error Object Start ---');
+      console.error('--- Full Error Object Start (service:Outlook365 Attempt) ---');
       console.error(error); 
-      console.error('--- Full Error Object End ---');
+      console.error('--- Full Error Object End (service:Outlook365 Attempt) ---');
 
       let detailedErrorMessage = 'Unknown error during email sending.';
-      if (error instanceof Error) { // Still good to check if it's an Error instance
+      if (error instanceof Error) { 
         detailedErrorMessage = error.message;
       } else if (typeof error === 'string') {
         detailedErrorMessage = error;
       }
 
-
-      // Attempt to access common additional properties
       const originalError = error.originalError || error.source || error; 
 
       if (originalError && originalError.response && originalError.response.data) { 
@@ -95,6 +101,10 @@ export default async function handler(
       if(error.reason) { 
           console.error('OAuth Error Reason:', error.reason);
           detailedErrorMessage += ` | Reason: ${error.reason}`;
+      }
+       if (error.responseBody) { 
+        console.error('Error Response Body:', error.responseBody);
+        detailedErrorMessage += ` | Response Body: ${error.responseBody}`;
       }
       if (originalError && originalError.stack) {
           console.error('Original Error Stack:', originalError.stack);
