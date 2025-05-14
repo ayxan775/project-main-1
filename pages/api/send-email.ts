@@ -20,28 +20,47 @@ export default async function handler(
       return res.status(400).json({ error: 'All fields are required.' });
     }
 
-    // Create a transporter object using the default SMTP transport
-    // You'll need to set these environment variables
+    // OAuth2 Configuration
+    const oauthClientId = process.env.OAUTH_CLIENT_ID;
+    const oauthClientSecret = process.env.OAUTH_CLIENT_SECRET;
+    // const oauthTenantId = process.env.OAUTH_TENANT_ID; // Tenant ID is often part of the token endpoint or implied for MS Graph
+    const oauthUserEmail = process.env.OAUTH_USER_EMAIL; // The email address the app will send from
+    const contactFormReceiverEmail = process.env.CONTACT_FORM_RECEIVER_EMAIL;
+
+    if (!oauthClientId || !oauthClientSecret || !oauthUserEmail || !contactFormReceiverEmail) {
+      console.error('Email configuration environment variables are not fully set.');
+      return res.status(500).json({ error: 'Server configuration error for email.', details: 'Required email environment variables missing.' });
+    }
+
+    // For Office365 with OAuth2, Nodemailer can often handle token generation
+    // if configured with the service and client credentials.
+    // The 'user' in auth is the email address of the account that granted permissions (the sender).
     const transporter = nodemailer.createTransport({
-      host: 'smtp.office365.com', // Microsoft's SMTP server
-      port: 587,
-      secure: false, // true for 465, false for other ports (587 uses STARTTLS)
+      service: 'Outlook365', // Use the Outlook365 service for built-in OAuth2 handling
       auth: {
-        user: process.env.EMAIL_SERVER_USER, // Your Microsoft email address
-        pass: process.env.EMAIL_SERVER_PASSWORD, // Your Microsoft email password
+        type: 'OAuth2',
+        user: oauthUserEmail,
+        clientId: oauthClientId,
+        clientSecret: oauthClientSecret,
+        // refreshToken: process.env.OAUTH_REFRESH_TOKEN, // If you have a refresh token for a specific user (delegated)
+        // accessToken: process.env.OAUTH_ACCESS_TOKEN, // If you manage tokens externally (less common for client_credentials)
+        // For client_credentials (application permissions), Nodemailer usually handles token fetching
+        // The tenantId might be implicitly handled by the MS Graph endpoints Nodemailer uses,
+        // or sometimes it's part of token acquisition URLs if you were doing it manually.
+        // For Nodemailer's built-in Outlook365 service, client/secret/user is often enough for app permissions.
       },
-      tls: {
-        ciphers:'SSLv3'
-      }
+      // tls: { // This might not be needed or could conflict with service:'Outlook365'
+      //   ciphers: 'SSLv3', 
+      // }
     });
 
     // Email options
     const mailOptions = {
-      from: `"${name}" <${process.env.EMAIL_SERVER_USER}>`, // Sender address (shows your email, but name is from form)
-      replyTo: email, // Reply-To field set to the form submitter's email
-      to: process.env.CONTACT_FORM_RECEIVER_EMAIL, // List of receivers
-      subject: `Contact Form: ${subject}`, // Subject line
-      text: `You have a new message from ${name} (${email}):\n\n${message}`, // Plain text body
+      from: `"${name}" <${oauthUserEmail}>`,
+      replyTo: email,
+      to: contactFormReceiverEmail,
+      subject: `Contact Form: ${subject}`,
+      text: `You have a new message from ${name} (${email}):\n\n${message}`,
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
           <h2 style="color: #333;">New Contact Form Submission</h2>
@@ -54,7 +73,7 @@ export default async function handler(
           <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
           <p style="font-size: 0.9em; color: #777;">This email was sent from the contact form on your website.</p>
         </div>
-      `, // HTML body
+      `,
     };
 
     try {
@@ -63,10 +82,12 @@ export default async function handler(
     } catch (error) {
       console.error('Error sending email:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      // For OAuth errors, the error object might have more specific details.
+      // e.g., if (error.response && error.response.data) console.error('OAuth Error Response:', error.response.data);
+      //      else if (error.code) console.error('Nodemailer Error Code:', error.code);
       return res.status(500).json({ error: 'Failed to send email.', details: errorMessage });
     }
   } else {
-    // Handle any other HTTP method
     res.setHeader('Allow', ['POST']);
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }

@@ -139,7 +139,6 @@
     "infoLabelLocation": "Ünvan",
     "infoLabelHours": "İş Saatları",
     "infoHoursLine1": "Bazar ertəsi-Cümə: 9:00 - 18:00",
-    "infoHoursLine2": "Şənbə: 10:00 - 14:00",
     "infoLabelFollow": "Bizi İzləyin",
     "formTitle": "Bizə Mesaj Göndərin",
     "mapOverlayTitle": "Ofisimizə Baş Çəkin",
@@ -174,12 +173,12 @@
     "dropzoneHint": "Dəstəklənən formatlar: PDF, Word, Excel, Mətn (maks {size}MB)"
   },
   "hero": {
-    "badge": "AzPort Supply-a Xoş Gəlmisiniz",
-    "heading1": "Etibarlı Sənaye",
-    "heading2": "Təchizat Həlləri",
-    "subtitle": "Azərbaycanda sənaye təchizat zəncirinin idarə edilməsində etibarlı tərəfdaşınız",
-    "buttonExplore": "Məhsulları Kəşf Edin",
-    "scrollIndicator": "Kəşf etmək üçün aşağı sürüşdürün"
+    "badge": "Welcome to AzPort Supply",
+    "heading1": "Reliable Industrial",
+    "heading2": "Supply Solution",
+    "subtitle": "Your trusted partner in industrial supply chain management in Azerbaijan",
+    "buttonExplore": "Explore Products",
+    "scrollIndicator": "Scroll to explore"
   },
   "homeProducts": {
     "errorFetch": "Məhsullar gətirilə bilmədi",

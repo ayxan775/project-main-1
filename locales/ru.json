@@ -139,7 +139,6 @@
     "infoLabelLocation": "Местоположение",
     "infoLabelHours": "Рабочее время",
     "infoHoursLine1": "Пн-Пт: 9:00 - 18:00",
-    "infoHoursLine2": "Сб: 10:00 - 14:00",
     "infoLabelFollow": "Подписывайтесь на нас",
     "formTitle": "Отправьте нам сообщение",
     "mapOverlayTitle": "Посетите наш офис",
@@ -174,12 +173,12 @@
     "dropzoneHint": "Поддерживаемые форматы: PDF, Word, Excel, Text (макс. {size} МБ)"
   },
   "hero": {
-    "badge": "Добро пожаловать в AzPort Supply",
-    "heading1": "Надежное промышленное",
-    "heading2": "Решение для поставок",
-    "subtitle": "Ваш надежный партнер в управлении промышленными цепочками поставок в Азербайджане",
-    "buttonExplore": "Изучить продукты",
-    "scrollIndicator": "Прокрутите для изучения"
+    "badge": "Welcome to AzPort Supply",
+    "heading1": "Reliable Industrial",
+    "heading2": "Supply Solution",
+    "subtitle": "Your trusted partner in industrial supply chain management in Azerbaijan",
+    "buttonExplore": "Explore Products",
+    "scrollIndicator": "Scroll to explore"
   },
   "homeProducts": {
     "errorFetch": "Не удалось получить продукты",
