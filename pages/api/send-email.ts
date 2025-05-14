@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import nodemailer from 'nodemailer';
-// No longer explicitly importing XOAuth2 as Nodemailer will handle it with service:'Outlook365'
 
 interface EmailRequestBody {
   name: string;
@@ -16,17 +15,12 @@ export default async function handler(
   if (req.method === 'POST') {
     const { name, email, subject, message } = req.body as EmailRequestBody;
 
-    // Basic validation
     if (!name || !email || !subject || !message) {
       return res.status(400).json({ error: 'All fields are required.' });
     }
 
-    // OAuth2 Configuration
     const oauthClientId = process.env.OAUTH_CLIENT_ID;
     const oauthClientSecret = process.env.OAUTH_CLIENT_SECRET;
-    // Tenant ID is not directly used in this simplified Nodemailer config,
-    // as 'Outlook365' service implies common Microsoft endpoints.
-    // const oauthTenantId = process.env.OAUTH_TENANT_ID; 
     const oauthUserEmail = process.env.OAUTH_USER_EMAIL; 
     const contactFormReceiverEmail = process.env.CONTACT_FORM_RECEIVER_EMAIL;
 
@@ -35,20 +29,23 @@ export default async function handler(
       return res.status(500).json({ error: 'Server configuration error for email.', details: 'Required email environment variables missing.' });
     }
 
+    console.log('Initializing Nodemailer transporter with OAuth2 for Outlook365...');
+    console.log(`Using OAUTH_USER_EMAIL: ${oauthUserEmail}`);
+    console.log(`Using OAUTH_CLIENT_ID: ${oauthClientId ? 'Set' : 'NOT SET'}`);
+    // Do NOT log client secret value
+
     const transporter = nodemailer.createTransport({
-      service: 'Outlook365', // Use the built-in Outlook365 service
+      service: 'Outlook365',
       auth: {
         type: 'OAuth2',
-        user: oauthUserEmail,       // The email address of the account to send from
-        clientId: oauthClientId,    // The Client ID of your registered application
-        clientSecret: oauthClientSecret, // The Client Secret of your registered application
-        // For client credentials flow with 'Outlook365' service, 
-        // Nodemailer should handle token generation and refresh automatically.
-        // No need for explicit accessUrl or refreshToken here usually.
+        user: oauthUserEmail,
+        clientId: oauthClientId,
+        clientSecret: oauthClientSecret,
       },
+      debug: true, // Enable debug output from Nodemailer
+      logger: true // Pipe debug output to console.log
     });
 
-    // Email options
     const mailOptions = {
       from: `"${name}" <${oauthUserEmail}>`,
       replyTo: email,
@@ -71,16 +68,16 @@ export default async function handler(
     };
 
     try {
-      console.log('Attempting to send email with service:Outlook365 and OAuth2 credentials...');
+      console.log('Attempting to send email with service:Outlook365 and OAuth2 credentials (debug enabled)...');
       await transporter.sendMail(mailOptions);
       console.log('Email sent successfully with service:Outlook365 and OAuth2.');
       return res.status(200).json({ success: true, message: 'Email sent successfully!' });
     } catch (err) { 
       const error = err as any; 
 
-      console.error('--- Full Error Object Start (service:Outlook365 Attempt) ---');
+      console.error('--- Full Error Object Start (service:Outlook365 Debug Attempt) ---');
       console.error(error); 
-      console.error('--- Full Error Object End (service:Outlook365 Attempt) ---');
+      console.error('--- Full Error Object End (service:Outlook365 Debug Attempt) ---');
 
       let detailedErrorMessage = 'Unknown error during email sending.';
       if (error instanceof Error) { 
