@@ -23,7 +23,7 @@ export default async function handler(
     // OAuth2 Configuration
     const oauthClientId = process.env.OAUTH_CLIENT_ID;
     const oauthClientSecret = process.env.OAUTH_CLIENT_SECRET;
-    // const oauthTenantId = process.env.OAUTH_TENANT_ID; // Tenant ID is often part of the token endpoint or implied for MS Graph
+    // const oauthTenantId = process.env.OAUTH_TENANT_ID; // Available if needed
     const oauthUserEmail = process.env.OAUTH_USER_EMAIL; // The email address the app will send from
     const contactFormReceiverEmail = process.env.CONTACT_FORM_RECEIVER_EMAIL;
 
@@ -32,26 +32,14 @@ export default async function handler(
       return res.status(500).json({ error: 'Server configuration error for email.', details: 'Required email environment variables missing.' });
     }
 
-    // For Office365 with OAuth2, Nodemailer can often handle token generation
-    // if configured with the service and client credentials.
-    // The 'user' in auth is the email address of the account that granted permissions (the sender).
     const transporter = nodemailer.createTransport({
-      service: 'Outlook365', // Use the Outlook365 service for built-in OAuth2 handling
+      service: 'Outlook365',
       auth: {
         type: 'OAuth2',
         user: oauthUserEmail,
         clientId: oauthClientId,
         clientSecret: oauthClientSecret,
-        // refreshToken: process.env.OAUTH_REFRESH_TOKEN, // If you have a refresh token for a specific user (delegated)
-        // accessToken: process.env.OAUTH_ACCESS_TOKEN, // If you manage tokens externally (less common for client_credentials)
-        // For client_credentials (application permissions), Nodemailer usually handles token fetching
-        // The tenantId might be implicitly handled by the MS Graph endpoints Nodemailer uses,
-        // or sometimes it's part of token acquisition URLs if you were doing it manually.
-        // For Nodemailer's built-in Outlook365 service, client/secret/user is often enough for app permissions.
       },
-      // tls: { // This might not be needed or could conflict with service:'Outlook365'
-      //   ciphers: 'SSLv3', 
-      // }
     });
 
     // Email options
@@ -79,13 +67,45 @@ export default async function handler(
     try {
       await transporter.sendMail(mailOptions);
       return res.status(200).json({ success: true, message: 'Email sent successfully!' });
-    } catch (error) {
-      console.error('Error sending email:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      // For OAuth errors, the error object might have more specific details.
-      // e.g., if (error.response && error.response.data) console.error('OAuth Error Response:', error.response.data);
-      //      else if (error.code) console.error('Nodemailer Error Code:', error.code);
-      return res.status(500).json({ error: 'Failed to send email.', details: errorMessage });
+    } catch (err) { // Changed 'error' to 'err' to avoid conflict with global Error
+      const error = err as any; // Cast to any to access dynamic properties for logging
+
+      console.error('--- Full Error Object Start ---');
+      console.error(error); 
+      console.error('--- Full Error Object End ---');
+
+      let detailedErrorMessage = 'Unknown error during email sending.';
+      if (error instanceof Error) { // Still good to check if it's an Error instance
+        detailedErrorMessage = error.message;
+      } else if (typeof error === 'string') {
+        detailedErrorMessage = error;
+      }
+
+
+      // Attempt to access common additional properties
+      const originalError = error.originalError || error.source || error; 
+
+      if (originalError && originalError.response && originalError.response.data) { 
+        console.error('OAuth HTTP Response Body:', JSON.stringify(originalError.response.data, null, 2));
+        detailedErrorMessage += ` | Server Response: ${JSON.stringify(originalError.response.data)}`;
+      } else if (error.code) { 
+        console.error('Nodemailer Error Code:', error.code);
+        detailedErrorMessage += ` | Nodemailer Code: ${error.code}`;
+      }
+      if(error.reason) { 
+          console.error('OAuth Error Reason:', error.reason);
+          detailedErrorMessage += ` | Reason: ${error.reason}`;
+      }
+      if (originalError && originalError.stack) {
+          console.error('Original Error Stack:', originalError.stack);
+      } else if (error.stack) {
+          console.error('Error Stack:', error.stack);
+      }
+
+      return res.status(500).json({ 
+        error: 'Failed to send email.', 
+        details: detailedErrorMessage
+      });
     }
   } else {
     res.setHeader('Allow', ['POST']);
