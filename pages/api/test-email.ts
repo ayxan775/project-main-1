@@ -33,7 +33,7 @@ export default async function handler(
     const tokenRequestBody = {
       client_id: oauthClientId,
       client_secret: oauthClientSecret,
-      scope: 'https://outlook.office.com/SMTP.Send',
+      scope: 'https://outlook.office.com/.default',
       grant_type: 'client_credentials',
     };
 
