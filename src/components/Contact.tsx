@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MapPin, Phone, Mail, Send, MessageSquare, Clock, Map, X, Facebook, Instagram, Linkedin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/router'; // Import useRouter
@@ -47,6 +47,7 @@ interface ContactFormData {
   email: string;
   subject: string;
   message: string;
+  attachment?: File | null;
 }
 
 interface ContactProps {
@@ -65,34 +66,84 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
     name: '',
     email: '',
     subject: '',
-    message: ''
+    message: '',
+    attachment: null
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
   const [submitMessage, setSubmitMessage] = useState('');
+  const [fileError, setFileError] = useState<string | null>(null);
 
+  // Text field character limits
+  const MAX_NAME_LENGTH = 100;
+  const MAX_SUBJECT_LENGTH = 200;
+  const MAX_MESSAGE_LENGTH = 2000;
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    // Apply character limits based on field name
+    let trimmedValue = value;
+    if (name === 'name' && value.length > MAX_NAME_LENGTH) {
+      trimmedValue = value.slice(0, MAX_NAME_LENGTH);
+    } else if (name === 'subject' && value.length > MAX_SUBJECT_LENGTH) {
+      trimmedValue = value.slice(0, MAX_SUBJECT_LENGTH);
+    } else if (name === 'message' && value.length > MAX_MESSAGE_LENGTH) {
+      trimmedValue = value.slice(0, MAX_MESSAGE_LENGTH);
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: trimmedValue
     }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    setFileError(null);
+    
+    if (file) {
+      if (file.size > MAX_FILE_SIZE) {
+        setFileError(`File size exceeds 5MB limit. Current size: ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
+        return;
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        attachment: file
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        attachment: null
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (fileError) return;
+    
     setIsSubmitting(true);
     setSubmitStatus(null);
     setSubmitMessage('');
 
     try {
+      // Create FormData object for file upload
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('subject', formData.subject);
+      formDataToSend.append('message', formData.message);
+      
+      if (formData.attachment) {
+        formDataToSend.append('attachment', formData.attachment);
+      }
+
       const response = await fetch('/api/send-email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        body: formDataToSend,
       });
 
       const result = await response.json();
@@ -100,7 +151,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
       if (response.ok) {
         setSubmitStatus('success');
         setSubmitMessage(result.message || t.alertSuccess); // Use server message or default
-        setFormData({ name: '', email: '', subject: '', message: '' }); // Reset form
+        setFormData({ name: '', email: '', subject: '', message: '', attachment: null }); // Reset form
         if (isModal && onClose) {
           // Optionally delay closing modal to show success message
           setTimeout(() => {
@@ -160,7 +211,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelName}</label> {/* Use translation */}
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelName}</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -173,9 +224,11 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 value={formData.name}
                 onChange={handleInputChange}
                 className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                placeholder={t.placeholderName} // Use translation
+                placeholder={t.placeholderName}
+                maxLength={MAX_NAME_LENGTH}
                 required
               />
+              <span className="text-xs text-gray-500 dark:text-gray-400">{formData.name.length}/{MAX_NAME_LENGTH}</span>
             </div>
           </div>
           
@@ -198,7 +251,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelSubject}</label> {/* Use translation */}
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelSubject}</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <MessageSquare className="h-5 w-5 text-gray-400" />
@@ -209,23 +262,46 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 value={formData.subject}
                 onChange={handleInputChange}
                 className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                placeholder={t.placeholderSubject} // Use translation
+                placeholder={t.placeholderSubject}
+                maxLength={MAX_SUBJECT_LENGTH}
                 required
               />
+              <span className="text-xs text-gray-500 dark:text-gray-400">{formData.subject.length}/{MAX_SUBJECT_LENGTH}</span>
             </div>
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelMessage}</label> {/* Use translation */}
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelMessage}</label>
             <textarea
-              rows={4}
+              rows={5}
               name="message"
               value={formData.message}
               onChange={handleInputChange}
               className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-              placeholder={t.placeholderMessage} // Use translation
+              placeholder={t.placeholderMessage}
+              maxLength={MAX_MESSAGE_LENGTH}
               required
             ></textarea>
+            <span className="text-xs text-gray-500 dark:text-gray-400">{formData.message.length}/{MAX_MESSAGE_LENGTH}</span>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attachment (optional, max 5MB)</label>
+            <div className="relative">
+              <input
+                type="file"
+                onChange={handleFileChange}
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+              />
+              {fileError && (
+                <p className="text-sm text-red-500 mt-1">{fileError}</p>
+              )}
+              {formData.attachment && (
+                <p className="text-sm text-green-500 mt-1">
+                  File selected: {formData.attachment.name} ({(formData.attachment.size / (1024 * 1024)).toFixed(2)}MB)
+                </p>
+              )}
+            </div>
           </div>
           
           <motion.div
@@ -454,8 +530,10 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                       onChange={handleInputChange}
                       className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
                       placeholder={t.placeholderName} // Use translation
+                      maxLength={MAX_NAME_LENGTH}
                       required
                     />
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{formData.name.length}/{MAX_NAME_LENGTH}</span>
                   </div>
                 </motion.div>
                 
@@ -490,8 +568,10 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                       onChange={handleInputChange}
                       className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
                       placeholder={t.placeholderSubject} // Use translation
+                      maxLength={MAX_SUBJECT_LENGTH}
                       required
                     />
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{formData.subject.length}/{MAX_SUBJECT_LENGTH}</span>
                   </div>
                 </motion.div>
                 
@@ -504,8 +584,29 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
                     placeholder={t.placeholderMessage} // Use translation
+                    maxLength={MAX_MESSAGE_LENGTH}
                     required
                   ></textarea>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{formData.message.length}/{MAX_MESSAGE_LENGTH}</span>
+                </motion.div>
+                
+                <motion.div variants={itemVariants}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attachment (optional, max 5MB)</label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      onChange={handleFileChange}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+                    />
+                    {fileError && (
+                      <p className="text-sm text-red-500 mt-1">{fileError}</p>
+                    )}
+                    {formData.attachment && (
+                      <p className="text-sm text-green-500 mt-1">
+                        File selected: {formData.attachment.name} ({(formData.attachment.size / (1024 * 1024)).toFixed(2)}MB)
+                      </p>
+                    )}
+                  </div>
                 </motion.div>
                 
                 <motion.div 
