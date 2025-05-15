@@ -170,20 +170,20 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
 
       if (response.ok) {
         setSubmitStatus('success');
-        setSubmitMessage(result.message || t.alertSuccess || "Message sent successfully!"); // Added hardcoded fallback
+        setSubmitMessage("message sended thanks, as soon as we will repyl");
         if (!isModal) { 
             setFormData({ name: '', email: '', subject: '', message: '', attachment: null, recaptchaToken: null });
             recaptchaRef.current?.reset();
         }
       } else {
         setSubmitStatus('error');
-        setSubmitMessage(result.error || t.alertError || 'An unexpected error occurred.');
+        setSubmitMessage("sorry we cannot send message try again");
         recaptchaRef.current?.reset();
       }
     } catch (error) {
       console.error('Submission error:', error);
       setSubmitStatus('error');
-      setSubmitMessage(t.alertError || 'Failed to send message. Please try again.');
+      setSubmitMessage("sorry we cannot send message try again");
       recaptchaRef.current?.reset();
     } finally {
       setIsSubmitting(false);
@@ -227,7 +227,8 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
           )}
         </div>
         
-        {submitStatus !== 'success' ? (
+        {/* Conditional rendering for form, success message, or error message */}
+        {!submitStatus && ( // Show form if submitStatus is null or empty
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t.labelName}</label>
@@ -237,8 +238,8 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
@@ -257,7 +258,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
-                <input 
+                <input
                   type="email"
                   name="email"
                   value={formData.email}
@@ -275,7 +276,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <MessageSquare className="h-5 w-5 text-gray-400" />
                 </div>
-                <input 
+                <input
                   type="text"
                   name="subject"
                   value={formData.subject}
@@ -293,7 +294,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t.labelMessage}</label>
               <div className="relative">
                 <textarea
-                  rows={4} 
+                  rows={4}
                   name="message"
                   value={formData.message}
                   onChange={handleInputChange}
@@ -347,7 +348,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
               whileTap={{ scale: 0.99 }}
               className="pt-1"
             >
-              <button 
+              <button
                 type="submit"
                 disabled={isSubmitting}
                 className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-2.5 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -368,32 +369,46 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 )}
               </button>
             </motion.div>
-            {submitStatus === 'error' && submitMessage && ( // Error message for form
-              <div className={`mt-4 p-3 rounded-md text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300`}>
-                {submitMessage}
-              </div>
-            )}
+            {/* Removed inline error message from here */}
           </form>
-        ) : ( // This block is for when submitStatus === 'success'
-          isModal && submitMessage && (
-            <div className="mt-4 p-4 rounded-md bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-              <div className="flex justify-between items-center">
-                <p>{submitMessage}</p>
-                <button
-                  onClick={() => {
-                    setFormData({ name: '', email: '', subject: '', message: '', attachment: null, recaptchaToken: null });
-                    recaptchaRef.current?.reset();
-                    setSubmitStatus(null);
-                    setSubmitMessage('');
-                    onClose?.();
-                  }}
-                  className="text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100 p-1 rounded-full -mr-1"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+        )}
+
+        {submitStatus === 'success' && isModal && submitMessage && (
+          <div className="mt-4 p-4 rounded-md bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+            <div className="flex justify-between items-center">
+              <p>{submitMessage}</p>
+              <button
+                onClick={() => {
+                  setFormData({ name: '', email: '', subject: '', message: '', attachment: null, recaptchaToken: null });
+                  recaptchaRef.current?.reset();
+                  setSubmitStatus(null);
+                  setSubmitMessage('');
+                  onClose?.();
+                }}
+                className="text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100 p-1 rounded-full -mr-1"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-          )
+          </div>
+        )}
+
+        {submitStatus === 'error' && isModal && submitMessage && (
+          <div className="mt-4 p-4 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+            <div className="flex justify-between items-center">
+              <p>{submitMessage}</p>
+              <button
+                onClick={() => {
+                  setSubmitStatus(null);
+                  setSubmitMessage('');
+                }}
+                className="text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-100 p-1 rounded-full -mr-1"
+                title="Try again"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
         )}
       </div>
     );
@@ -719,7 +734,19 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                         variants={itemVariants}
                         className={`mt-4 p-3 rounded-md text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300`}
                     >
-                        {submitMessage}
+                        <div className="flex justify-between items-center">
+                          <span>{submitMessage}</span>
+                          <button
+                            onClick={() => {
+                              setSubmitStatus(null);
+                              setSubmitMessage('');
+                            }}
+                            className="text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100 p-1 rounded-full -mr-1 -mt-1 -mb-1"
+                            title="Close message"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
                     </motion.div>
                  )}
                  {submitStatus === 'error' && submitMessage && (
@@ -727,7 +754,19 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                         variants={itemVariants}
                         className={`mt-4 p-3 rounded-md text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300`}
                     >
-                        {submitMessage}
+                        <div className="flex justify-between items-center">
+                          <span>{submitMessage}</span>
+                          <button
+                            onClick={() => {
+                              setSubmitStatus(null);
+                              setSubmitMessage('');
+                            }}
+                            className="text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-100 p-1 rounded-full -mr-1 -mt-1 -mb-1"
+                            title="Close message"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
                     </motion.div>
                  )}
               </motion.form>

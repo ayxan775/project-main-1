@@ -3,8 +3,9 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/contact": "pages/contact.js",
-  "/": "pages/index.js",
-  "/api/send-email": "pages/api/send-email.js",
   "/about": "pages/about.js",
-  "/api/products": "pages/api/products.js"
+  "/": "pages/index.js",
+  "/api/products": "pages/api/products.js",
+  "/api/send-email": "pages/api/send-email.js",
+  "/404": "pages/404.js"
 }
