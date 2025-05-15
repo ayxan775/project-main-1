@@ -56,7 +56,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     res.status(200).json({ message: 'Translations updated successfully!' });
   } catch (error) {
-    console.error('Error updating translations:', error);
-    res.status(500).json({ message: 'Failed to update translations.', error: (error as Error).message });
+   const err = error as Error;
+   console.error('Error updating translations:', err);
+   console.error('Error name:', err.name);
+   console.error('Error message:', err.message);
+   console.error('Error stack:', err.stack);
+   res.status(500).json({ message: 'Failed to update translations.', errorName: err.name, errorMessage: err.message, errorStack: err.stack });
   }
 }
