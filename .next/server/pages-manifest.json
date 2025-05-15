@@ -3,7 +3,6 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/contact": "pages/contact.js",
-  "/api/products": "pages/api/products.js",
   "/": "pages/index.js",
-  "/api/send-email": "pages/api/send-email.js"
+  "/api/products": "pages/api/products.js"
 }

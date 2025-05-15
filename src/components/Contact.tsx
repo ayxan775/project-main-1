@@ -335,7 +335,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
           <div className="mt-4">
             <ReCAPTCHA
               ref={recaptchaRef}
-              sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+              sitekey="6LdnxjorAAAAAE8GP_mvWHXUXeNRTRTO7Zvega3b"
               onChange={handleRecaptchaChange}
               onErrored={() => setRecaptchaError(t.recaptchaError || 'Failed to load reCAPTCHA. Please try again.')}
             />
@@ -652,7 +652,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 <motion.div variants={itemVariants} className="mt-4">
                   <ReCAPTCHA
                     ref={recaptchaRef}
-                    sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+                    sitekey="6LdnxjorAAAAAE8GP_mvWHXUXeNRTRTO7Zvega3b"
                     onChange={handleRecaptchaChange}
                     onErrored={() => setRecaptchaError(t.recaptchaError || 'Failed to load reCAPTCHA. Please try again.')}
                   />
