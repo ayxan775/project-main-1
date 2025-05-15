@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { MapPin, Phone, Mail, Send, MessageSquare, Clock, Map, X, Facebook, Instagram, Linkedin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/router'; // Import useRouter
+import ReCAPTCHA from 'react-google-recaptcha';
 
 // Import translations
 import en from '../../locales/en.json';
@@ -22,6 +23,7 @@ interface ContactTranslations {
   buttonSending?: string; // Optional as it might not be in all locale files initially
   alertSuccess: string;
   alertError?: string; // Optional for the same reason
+  recaptchaError?: string; // Add recaptchaError to translations
   modalDefaultTitle: string;
   pageBadge: string;
   pageHeading1: string;
@@ -48,6 +50,7 @@ interface ContactFormData {
   subject: string;
   message: string;
   attachment?: File | null;
+  recaptchaToken?: string | null;
 }
 
 interface ContactProps {
@@ -62,17 +65,20 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
   const { locale } = router;
   const t = (locale === 'az' ? az.contact : locale === 'ru' ? ru.contact : en.contact) as ContactTranslations; // Select and cast translations
 
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [formData, setFormData] = useState<ContactFormData>(initialValues || {
     name: '',
     email: '',
     subject: '',
     message: '',
-    attachment: null
+    attachment: null,
+    recaptchaToken: null
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
   const [submitMessage, setSubmitMessage] = useState('');
   const [fileError, setFileError] = useState<string | null>(null);
+  const [recaptchaError, setRecaptchaError] = useState<string | null>(null);
 
   // Text field character limits
   const MAX_NAME_LENGTH = 100;
@@ -121,9 +127,23 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
     }
   };
 
+  const handleRecaptchaChange = (token: string | null) => {
+    setRecaptchaError(null);
+    setFormData(prev => ({
+      ...prev,
+      recaptchaToken: token
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (fileError) return;
+    
+    // Validate reCAPTCHA
+    if (!formData.recaptchaToken) {
+      setRecaptchaError(t.recaptchaError || 'Please verify that you are not a robot.');
+      return;
+    }
     
     setIsSubmitting(true);
     setSubmitStatus(null);
@@ -136,6 +156,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
       formDataToSend.append('email', formData.email);
       formDataToSend.append('subject', formData.subject);
       formDataToSend.append('message', formData.message);
+      formDataToSend.append('recaptchaToken', formData.recaptchaToken || '');
       
       if (formData.attachment) {
         formDataToSend.append('attachment', formData.attachment);
@@ -151,7 +172,10 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
       if (response.ok) {
         setSubmitStatus('success');
         setSubmitMessage(result.message || t.alertSuccess); // Use server message or default
-        setFormData({ name: '', email: '', subject: '', message: '', attachment: null }); // Reset form
+        setFormData({ name: '', email: '', subject: '', message: '', attachment: null, recaptchaToken: null }); // Reset form
+        if (recaptchaRef.current) {
+          recaptchaRef.current.reset();
+        }
         if (isModal && onClose) {
           // Optionally delay closing modal to show success message
           setTimeout(() => {
@@ -161,11 +185,19 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
       } else {
         setSubmitStatus('error');
         setSubmitMessage(result.error || t.alertError || 'An unexpected error occurred.');
+        // Reset reCAPTCHA on error
+        if (recaptchaRef.current) {
+          recaptchaRef.current.reset();
+        }
       }
     } catch (error) {
       console.error('Submission error:', error);
       setSubmitStatus('error');
       setSubmitMessage(t.alertError || 'Failed to send message. Please try again.');
+      // Reset reCAPTCHA on error
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -302,6 +334,17 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 </p>
               )}
             </div>
+          </div>
+          
+          <div className="mt-4">
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey="6LcZVTorAAAAADCsaeMaOXuzLRMTrOPnh3no4HDD"
+              onChange={handleRecaptchaChange}
+            />
+            {recaptchaError && (
+              <p className="text-sm text-red-500 mt-1">{recaptchaError}</p>
+            )}
           </div>
           
           <motion.div
@@ -607,6 +650,17 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                       </p>
                     )}
                   </div>
+                </motion.div>
+                
+                <motion.div variants={itemVariants} className="mt-4">
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey="6LcZVTorAAAAADCsaeMaOXuzLRMTrOPnh3no4HDD"
+                    onChange={handleRecaptchaChange}
+                  />
+                  {recaptchaError && (
+                    <p className="text-sm text-red-500 mt-1">{recaptchaError}</p>
+                  )}
                 </motion.div>
                 
                 <motion.div 

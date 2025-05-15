@@ -130,6 +130,7 @@
     "alertSuccess": "Your message has been sent! We will contact you shortly.",
     "buttonSending": "Sending...",
     "alertError": "Failed to send message. Please try again.",
+    "recaptchaError": "Please verify that you are not a robot.",
     "modalDefaultTitle": "Contact Us",
     "pageBadge": "Contact Us",
     "pageHeading1": "Have Questions?",

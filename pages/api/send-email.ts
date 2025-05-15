@@ -32,6 +32,37 @@ interface OAuthTokenResponse {
   access_token: string;
 }
 
+interface ReCaptchaResponse {
+  success: boolean;
+  challenge_ts?: string;
+  hostname?: string;
+  'error-codes'?: string[];
+}
+
+// Helper function to verify reCAPTCHA token
+const verifyRecaptcha = async (token: string): Promise<boolean> => {
+  try {
+    const secretKey = '6LcZVTorAAAAAD1DCXcouJw-6Ym-yB1wFZpvzcg9';
+    const response = await axios.post<ReCaptchaResponse>(
+      'https://www.google.com/recaptcha/api/siteverify',
+      querystring.stringify({
+        secret: secretKey,
+        response: token,
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
+
+    return response.data.success;
+  } catch (error) {
+    console.error('reCAPTCHA verification error:', error);
+    return false;
+  }
+};
+
 // Helper function to parse form data
 const parseForm = async (req: NextApiRequest): Promise<{ fields: formidable.Fields; files: formidable.Files }> => {
   return new Promise((resolve, reject) => {
@@ -60,9 +91,20 @@ export default async function handler(
       const email = fields.email && fields.email[0];
       const subject = fields.subject && fields.subject[0];
       const message = fields.message && fields.message[0];
+      const recaptchaToken = fields.recaptchaToken && fields.recaptchaToken[0];
       
       if (!name || !email || !subject || !message) {
         return res.status(400).json({ error: 'All fields are required.' });
+      }
+      
+      // Verify reCAPTCHA token
+      if (!recaptchaToken) {
+        return res.status(400).json({ error: 'reCAPTCHA verification is required.' });
+      }
+      
+      const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+      if (!isRecaptchaValid) {
+        return res.status(400).json({ error: 'reCAPTCHA verification failed. Please try again.' });
       }
       
       // Prepare attachment if one was uploaded
