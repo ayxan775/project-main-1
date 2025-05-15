@@ -339,7 +339,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
           <div className="mt-4">
             <ReCAPTCHA
               ref={recaptchaRef}
-              sitekey="6LcZVTorAAAAADCsaeMaOXuzLRMTrOPnh3no4HDD"
+              sitekey="6LdnxjorAAAAAE8GP_mvWHXUXeNRTTO7Zvega3b"
               onChange={handleRecaptchaChange}
             />
             {recaptchaError && (
@@ -655,7 +655,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 <motion.div variants={itemVariants} className="mt-4">
                   <ReCAPTCHA
                     ref={recaptchaRef}
-                    sitekey="6LcZVTorAAAAADCsaeMaOXuzLRMTrOPnh3no4HDD"
+                    sitekey="6LdnxjorAAAAAE8GP_mvWHXUXeNRTTO7Zvega3b"
                     onChange={handleRecaptchaChange}
                   />
                   {recaptchaError && (

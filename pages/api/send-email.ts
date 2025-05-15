@@ -42,7 +42,7 @@ interface ReCaptchaResponse {
 // Helper function to verify reCAPTCHA token
 const verifyRecaptcha = async (token: string): Promise<boolean> => {
   try {
-    const secretKey = '6LcZVTorAAAAAD1DCXcouJw-6Ym-yB1wFZpvzcg9';
+    const secretKey = '6LdnxjorAAAAAEwN4-bFw9FXeKvSlHtWPdvEIOho';
     const response = await axios.post<ReCaptchaResponse>(
       'https://www.google.com/recaptcha/api/siteverify',
       querystring.stringify({
