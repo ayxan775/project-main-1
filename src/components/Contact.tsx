@@ -170,12 +170,11 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
 
       if (response.ok) {
         setSubmitStatus('success');
-        setSubmitMessage(result.message || t.alertSuccess);
-        if (!isModal) { // For full page, reset form immediately
+        setSubmitMessage(result.message || t.alertSuccess || "Message sent successfully!"); // Added hardcoded fallback
+        if (!isModal) { 
             setFormData({ name: '', email: '', subject: '', message: '', attachment: null, recaptchaToken: null });
             recaptchaRef.current?.reset();
         }
-        // For modal, success message will be shown, and user will close it via a button which then resets the form.
       } else {
         setSubmitStatus('error');
         setSubmitMessage(result.error || t.alertError || 'An unexpected error occurred.');
@@ -228,7 +227,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
           )}
         </div>
         
-        {submitStatus !== 'success' && (
+        {submitStatus !== 'success' ? (
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t.labelName}</label>
@@ -369,32 +368,32 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 )}
               </button>
             </motion.div>
+            {submitStatus === 'error' && submitMessage && ( // Error message for form
+              <div className={`mt-4 p-3 rounded-md text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300`}>
+                {submitMessage}
+              </div>
+            )}
           </form>
-        )}
-
-        {submitStatus === 'success' && isModal && submitMessage && (
-          <div className="mt-4 p-4 rounded-md bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-            <div className="flex justify-between items-center">
-              <p>{submitMessage}</p>
-              <button
-                onClick={() => {
-                  setFormData({ name: '', email: '', subject: '', message: '', attachment: null, recaptchaToken: null });
-                  recaptchaRef.current?.reset();
-                  setSubmitStatus(null);
-                  setSubmitMessage('');
-                  onClose?.();
-                }}
-                className="text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100 p-1 rounded-full -mr-1"
-              >
-                <X className="h-5 w-5" />
-              </button>
+        ) : ( // This block is for when submitStatus === 'success'
+          isModal && submitMessage && (
+            <div className="mt-4 p-4 rounded-md bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+              <div className="flex justify-between items-center">
+                <p>{submitMessage}</p>
+                <button
+                  onClick={() => {
+                    setFormData({ name: '', email: '', subject: '', message: '', attachment: null, recaptchaToken: null });
+                    recaptchaRef.current?.reset();
+                    setSubmitStatus(null);
+                    setSubmitMessage('');
+                    onClose?.();
+                  }}
+                  className="text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100 p-1 rounded-full -mr-1"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-        {submitStatus === 'error' && submitMessage && (
-          <div className={`mt-4 p-3 rounded-md text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300`}>
-            {submitMessage}
-          </div>
+          )
         )}
       </div>
     );
