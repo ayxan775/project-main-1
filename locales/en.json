@@ -403,7 +403,7 @@
     "applyButton": "Apply Now",
     "modalApplyTitle": "Apply for {jobTitle}",
     "modalApplyInstruction": "Thank you for your interest in joining our team! To apply for this position, please send your resume and cover letter to:",
-    "modalEmail": "Sales@azportsupply.com",
+    "modalEmail": "careers@azportsupply.com",
     "modalSubjectInstruction": "Please include the job title \"{jobTitle}\" in the subject line.",
     "modalCloseButton": "Got it, thanks!",
     "srClose": "Close"
@@ -462,7 +462,7 @@
     "faqHeading": "Frequently Asked Questions",
     "faqSubtitle": "Find quick answers to common questions about our services",
     "faq1Question": "What are your business hours?",
-    "faq1Answer": "We are open Monday to Friday from 9:00 AM to 6:00 PM, and Saturday from 10:00 AM to 2:00 PM (Azerbaijan Time). We are closed on Sundays and public holidays.",
+    "faq1Answer": "We are open Monday to Friday from 9:00 AM to 6:00 PM (Azerbaijan Time). We are closed on Sundays and public holidays.",
     "faq2Question": "How quickly can I expect a response?",
     "faq2Answer": "We strive to respond to all inquiries within 24 hours during business days. For urgent matters, please contact us by phone.",
     "faq3Question": "Do you provide international shipping?",

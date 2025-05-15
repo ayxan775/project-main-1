@@ -170,20 +170,20 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
 
       if (response.ok) {
         setSubmitStatus('success');
-        setSubmitMessage("message sended thanks, as soon as we will repyl");
-        if (!isModal) { 
+        setSubmitMessage(t.alertSuccess || "Message sent successfully! We will contact you shortly.");
+        if (!isModal) {
             setFormData({ name: '', email: '', subject: '', message: '', attachment: null, recaptchaToken: null });
             recaptchaRef.current?.reset();
         }
       } else {
         setSubmitStatus('error');
-        setSubmitMessage("sorry we cannot send message try again");
+        setSubmitMessage(t.alertError || "Sorry, we couldn't send your message. Please try again.");
         recaptchaRef.current?.reset();
       }
     } catch (error) {
       console.error('Submission error:', error);
       setSubmitStatus('error');
-      setSubmitMessage("sorry we cannot send message try again");
+      setSubmitMessage(t.alertError || "Sorry, we couldn't send your message. Please try again.");
       recaptchaRef.current?.reset();
     } finally {
       setIsSubmitting(false);
@@ -732,7 +732,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                  {submitStatus === 'success' && !isModal && submitMessage && (
                     <motion.div
                         variants={itemVariants}
-                        className={`mt-4 p-3 rounded-md text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300`}
+                        className={`mt-2 p-3 rounded-md text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300`}
                     >
                         <div className="flex justify-between items-center">
                           <span>{submitMessage}</span>
@@ -749,10 +749,9 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                         </div>
                     </motion.div>
                  )}
-                 {submitStatus === 'error' && submitMessage && (
-                    <motion.div
-                        variants={itemVariants}
-                        className={`mt-4 p-3 rounded-md text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300`}
+                {submitStatus === 'error' && submitMessage && (
+                   <div
+                       className={`mt-2 p-3 rounded-md text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300`}
                     >
                         <div className="flex justify-between items-center">
                           <span>{submitMessage}</span>
@@ -767,7 +766,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                             <X className="h-4 w-4" />
                           </button>
                         </div>
-                    </motion.div>
+                    </div>
                  )}
               </motion.form>
             </div>

@@ -352,14 +352,16 @@ export function About() {
               <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
                 {tAbout.ctaSubtitle}
               </p>
-              <motion.button
-                className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-50 transition-all duration-300 inline-flex items-center group"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {tAbout.ctaButton}
-                <ChevronRight className="ml-2 h-5 w-5 transform group-hover:translate-x-1 transition-transform" />
-              </motion.button>
+              <Link href="/contact" passHref>
+                <motion.button
+                  className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-50 transition-all duration-300 inline-flex items-center group"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {tAbout.ctaButton}
+                  <ChevronRight className="ml-2 h-5 w-5 transform group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </Link>
             </div>
           </motion.div>
         </div>

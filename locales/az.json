@@ -375,9 +375,9 @@
     "contactEmailTitle": "Bizə Email Göndərin",
     "contactEmailEmail": "Sales@azportsupply.com",
     "contactEmailLink": "Email göndərin →",
-    "ctaHeading": "Təchizat Zəncirinizi Dönüşdürməyə Hazırsınız?",
-    "ctaSubtitle": "Səmərəliliyi və böyüməni təmin edən innovativ həllər üçün AzPort Supply ilə əməkdaşlıq edin.",
-    "ctaButton": "Başlamaq üçün Bizimlə Əlaqə Saxlayın"
+    "ctaHeading": "Təchizat zəncirinizi təkmilləşdirməyə hazırsınız?",
+    "ctaSubtitle": "Effektivlik və inkişafı təmin edən innovativ həllər üçün AzPort Supply ilə əməkdaşlıq edin.",
+    "ctaButton": "Bu gün başlayın"
   },
   "careerPageContent": {
     "heroBadge": "Komandamıza Qoşulun",
@@ -402,7 +402,7 @@
     "applyButton": "Müraciət Edin",
     "modalApplyTitle": "{jobTitle} vakansiyasına müraciət edin",
     "modalApplyInstruction": "Komandamıza qoşulmaqda marağınız üçün təşəkkür edirik! Bu vəzifəyə müraciət etmək üçün zəhmət olmasa CV-nizi və motivasiya məktubunuzu aşağıdakı email ünvanına göndərin:",
-    "modalEmail": "Sales@azportsupply.com",
+    "modalEmail": "careers@azportsupply.com",
     "modalSubjectInstruction": "Zəhmət olmasa mövzu sətrində \"{jobTitle}\" vakansiya adını qeyd edin.",
     "modalCloseButton": "Anladım",
     "srClose": "Bağla"
@@ -461,7 +461,7 @@
     "faqHeading": "Tez-tez Verilən Suallar",
     "faqSubtitle": "Xidmətlərimizlə bağlı ümumi suallara tez cavab tapın",
     "faq1Question": "İş saatlarınız necədir?",
-    "faq1Answer": "Biz Bazar ertəsi-Cümə günləri saat 9:00-dan 18:00-dək, Şənbə günləri isə 10:00-dan 14:00-dək (Azərbaycan vaxtı ilə) xidmət göstəririk. Bazar günləri və rəsmi bayramlarda fəaliyyət göstərmirik.",
+    "faq1Answer": "Biz Bazar ertəsi-Cümə günləri saat 9:00-dan 18:00-dək (Azərbaycan vaxtı ilə) xidmət göstəririk. Bazar günləri və rəsmi bayramlarda fəaliyyət göstərmirik.",
     "faq2Question": "Sorğuma nə qədər tez cavab gözləyə bilərəm?",
     "faq2Answer": "Biz iş günlərində bütün sorğulara 24 saat ərzində cavab verməyə çalışırıq. Təcili məsələlər üçün zəhmət olmasa telefonla əlaqə saxlayın.",
     "faq3Question": "Beynəlxalq çatdırılma xidmətiniz varmı?",
