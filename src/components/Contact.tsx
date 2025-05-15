@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { MapPin, Phone, Mail, Send, MessageSquare, Clock, Map, X, Facebook, Instagram, Linkedin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/router'; // Import useRouter
@@ -8,6 +8,22 @@ import ReCAPTCHA from 'react-google-recaptcha';
 import en from '../../locales/en.json';
 import az from '../../locales/az.json';
 import ru from '../../locales/ru.json';
+
+// Add TypeScript declaration for window object
+declare global {
+  interface Window {
+    handleRecaptchaCallback: (token: string) => void;
+    onRecaptchaLoad: () => void;
+    grecaptcha: {
+      render: (container: string | HTMLElement, parameters: {
+        sitekey: string;
+        callback: (token: string) => void;
+        theme?: string;
+      }) => number;
+      reset: (widgetId: number) => void;
+    };
+  }
+}
 
 // Define an interface for the contact translation keys
 interface ContactTranslations {
@@ -79,12 +95,58 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
   const [submitMessage, setSubmitMessage] = useState('');
   const [fileError, setFileError] = useState<string | null>(null);
   const [recaptchaError, setRecaptchaError] = useState<string | null>(null);
+  const [recaptchaWidgetId, setRecaptchaWidgetId] = useState<number | null>(null);
+  const modalRecaptchaRef = useRef<HTMLDivElement>(null);
+  const fullPageRecaptchaRef = useRef<HTMLDivElement>(null);
 
   // Text field character limits
   const MAX_NAME_LENGTH = 100;
   const MAX_SUBJECT_LENGTH = 200;
   const MAX_MESSAGE_LENGTH = 2000;
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
+  // Define global callback for reCAPTCHA
+  useEffect(() => {
+    // Define the callback function that will be called when reCAPTCHA is completed
+    window.handleRecaptchaCallback = (token: string) => {
+      setRecaptchaError(null);
+      setFormData(prev => ({
+        ...prev,
+        recaptchaToken: token
+      }));
+    };
+
+    // Define onRecaptchaLoad function to be called when reCAPTCHA API is loaded
+    window.onRecaptchaLoad = () => {
+      if (window.grecaptcha) {
+        // For modal form
+        if (isModal && modalRecaptchaRef.current) {
+          const widgetId = window.grecaptcha.render(modalRecaptchaRef.current, {
+            sitekey: '6LdnxjorAAAAAE8GP_mvWHXUXeNRTTO7Zvega3b',
+            callback: window.handleRecaptchaCallback
+          });
+          setRecaptchaWidgetId(widgetId);
+        }
+        
+        // For full page form
+        if (!isModal && fullPageRecaptchaRef.current) {
+          const widgetId = window.grecaptcha.render(fullPageRecaptchaRef.current, {
+            sitekey: '6LdnxjorAAAAAE8GP_mvWHXUXeNRTTO7Zvega3b',
+            callback: window.handleRecaptchaCallback
+          });
+          setRecaptchaWidgetId(widgetId);
+        }
+      }
+    };
+
+    // Cleanup
+    return () => {
+      // @ts-ignore
+      delete window.handleRecaptchaCallback;
+      // @ts-ignore
+      delete window.onRecaptchaLoad;
+    };
+  }, [isModal]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -125,14 +187,6 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
         attachment: null
       }));
     }
-  };
-
-  const handleRecaptchaChange = (token: string | null) => {
-    setRecaptchaError(null);
-    setFormData(prev => ({
-      ...prev,
-      recaptchaToken: token
-    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -336,16 +390,10 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
             </div>
           </div>
           
-          <div className="mt-4">
-            <ReCAPTCHA
-              ref={recaptchaRef}
-              sitekey="6LdnxjorAAAAAE8GP_mvWHXUXeNRTTO7Zvega3b"
-              onChange={handleRecaptchaChange}
-            />
-            {recaptchaError && (
-              <p className="text-sm text-red-500 mt-1">{recaptchaError}</p>
-            )}
-          </div>
+          <div ref={modalRecaptchaRef} className="mt-4"></div>
+          {recaptchaError && (
+            <p className="text-sm text-red-500 mt-1">{recaptchaError}</p>
+          )}
           
           <motion.div
             whileHover={{ scale: 1.01 }}
@@ -653,15 +701,11 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 </motion.div>
                 
                 <motion.div variants={itemVariants} className="mt-4">
-                  <ReCAPTCHA
-                    ref={recaptchaRef}
-                    sitekey="6LdnxjorAAAAAE8GP_mvWHXUXeNRTTO7Zvega3b"
-                    onChange={handleRecaptchaChange}
-                  />
-                  {recaptchaError && (
-                    <p className="text-sm text-red-500 mt-1">{recaptchaError}</p>
-                  )}
+                  <div ref={fullPageRecaptchaRef} className="mt-4"></div>
                 </motion.div>
+                {recaptchaError && (
+                  <p className="text-sm text-red-500 mt-1">{recaptchaError}</p>
+                )}
                 
                 <motion.div 
                   className="pt-3"
