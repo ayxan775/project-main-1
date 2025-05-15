@@ -16,7 +16,6 @@ export default function Document() {
         <meta property="og:url" content="https://azportsupply.com" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="icon" href="/favicon.ico" />
-        <script src={`https://www.google.com/recaptcha/api.js?render=explicit&onload=onRecaptchaLoad&domain=azportsupply.com`} async defer></script>
       </Head>
       <body>
         <Main />

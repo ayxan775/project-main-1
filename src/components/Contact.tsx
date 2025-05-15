@@ -9,22 +9,6 @@ import en from '../../locales/en.json';
 import az from '../../locales/az.json';
 import ru from '../../locales/ru.json';
 
-// Add TypeScript declaration for window object
-declare global {
-  interface Window {
-    handleRecaptchaCallback: (token: string) => void;
-    onRecaptchaLoad: () => void;
-    grecaptcha: {
-      render: (container: string | HTMLElement, parameters: {
-        sitekey: string;
-        callback: (token: string) => void;
-        theme?: string;
-      }) => number;
-      reset: (widgetId: number) => void;
-    };
-  }
-}
-
 // Define an interface for the contact translation keys
 interface ContactTranslations {
   labelName: string;
@@ -95,9 +79,6 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
   const [submitMessage, setSubmitMessage] = useState('');
   const [fileError, setFileError] = useState<string | null>(null);
   const [recaptchaError, setRecaptchaError] = useState<string | null>(null);
-  const [recaptchaWidgetId, setRecaptchaWidgetId] = useState<number | null>(null);
-  const modalRecaptchaRef = useRef<HTMLDivElement>(null);
-  const fullPageRecaptchaRef = useRef<HTMLDivElement>(null);
 
   // Text field character limits
   const MAX_NAME_LENGTH = 100;
@@ -105,48 +86,15 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
   const MAX_MESSAGE_LENGTH = 2000;
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
-  // Define global callback for reCAPTCHA
-  useEffect(() => {
-    // Define the callback function that will be called when reCAPTCHA is completed
-    window.handleRecaptchaCallback = (token: string) => {
+  const handleRecaptchaChange = (token: string | null) => {
+    if (token) {
       setRecaptchaError(null);
       setFormData(prev => ({
         ...prev,
         recaptchaToken: token
       }));
-    };
-
-    // Define onRecaptchaLoad function to be called when reCAPTCHA API is loaded
-    window.onRecaptchaLoad = () => {
-      if (window.grecaptcha) {
-        // For modal form
-        if (isModal && modalRecaptchaRef.current) {
-          const widgetId = window.grecaptcha.render(modalRecaptchaRef.current, {
-            sitekey: '6LdnxjorAAAAAE8GP_mvWHXUXeNRTTO7Zvega3b',
-            callback: window.handleRecaptchaCallback
-          });
-          setRecaptchaWidgetId(widgetId);
-        }
-        
-        // For full page form
-        if (!isModal && fullPageRecaptchaRef.current) {
-          const widgetId = window.grecaptcha.render(fullPageRecaptchaRef.current, {
-            sitekey: '6LdnxjorAAAAAE8GP_mvWHXUXeNRTTO7Zvega3b',
-            callback: window.handleRecaptchaCallback
-          });
-          setRecaptchaWidgetId(widgetId);
-        }
-      }
-    };
-
-    // Cleanup
-    return () => {
-      // @ts-ignore
-      delete window.handleRecaptchaCallback;
-      // @ts-ignore
-      delete window.onRecaptchaLoad;
-    };
-  }, [isModal]);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -227,9 +175,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
         setSubmitStatus('success');
         setSubmitMessage(result.message || t.alertSuccess); // Use server message or default
         setFormData({ name: '', email: '', subject: '', message: '', attachment: null, recaptchaToken: null }); // Reset form
-        if (recaptchaRef.current) {
-          recaptchaRef.current.reset();
-        }
+        recaptchaRef.current?.reset();
         if (isModal && onClose) {
           // Optionally delay closing modal to show success message
           setTimeout(() => {
@@ -240,18 +186,14 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
         setSubmitStatus('error');
         setSubmitMessage(result.error || t.alertError || 'An unexpected error occurred.');
         // Reset reCAPTCHA on error
-        if (recaptchaRef.current) {
-          recaptchaRef.current.reset();
-        }
+        recaptchaRef.current?.reset();
       }
     } catch (error) {
       console.error('Submission error:', error);
       setSubmitStatus('error');
       setSubmitMessage(t.alertError || 'Failed to send message. Please try again.');
       // Reset reCAPTCHA on error
-      if (recaptchaRef.current) {
-        recaptchaRef.current.reset();
-      }
+      recaptchaRef.current?.reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -390,7 +332,14 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
             </div>
           </div>
           
-          <div ref={modalRecaptchaRef} className="mt-4"></div>
+          <div className="mt-4">
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+              onChange={handleRecaptchaChange}
+              onErrored={() => setRecaptchaError(t.recaptchaError || 'Failed to load reCAPTCHA. Please try again.')}
+            />
+          </div>
           {recaptchaError && (
             <p className="text-sm text-red-500 mt-1">{recaptchaError}</p>
           )}
@@ -701,7 +650,12 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 </motion.div>
                 
                 <motion.div variants={itemVariants} className="mt-4">
-                  <div ref={fullPageRecaptchaRef} className="mt-4"></div>
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+                    onChange={handleRecaptchaChange}
+                    onErrored={() => setRecaptchaError(t.recaptchaError || 'Failed to load reCAPTCHA. Please try again.')}
+                  />
                 </motion.div>
                 {recaptchaError && (
                   <p className="text-sm text-red-500 mt-1">{recaptchaError}</p>
