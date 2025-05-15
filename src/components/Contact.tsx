@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MapPin, Phone, Mail, Send, MessageSquare, Clock, Map, X, Facebook, Instagram, Linkedin } from 'lucide-react';
+import { MapPin, Phone, Mail, Send, MessageSquare, Clock, Map, X, Facebook, Instagram, Linkedin, UploadCloud } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/router'; // Import useRouter
 import ReCAPTCHA from 'react-google-recaptcha';
@@ -99,7 +99,6 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
-    // Apply character limits based on field name
     let trimmedValue = value;
     if (name === 'name' && value.length > MAX_NAME_LENGTH) {
       trimmedValue = value.slice(0, MAX_NAME_LENGTH);
@@ -141,7 +140,6 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
     e.preventDefault();
     if (fileError) return;
     
-    // Validate reCAPTCHA
     if (!formData.recaptchaToken) {
       setRecaptchaError(t.recaptchaError || 'Please verify that you are not a robot.');
       return;
@@ -152,7 +150,6 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
     setSubmitMessage('');
 
     try {
-      // Create FormData object for file upload
       const formDataToSend = new FormData();
       formDataToSend.append('name', formData.name);
       formDataToSend.append('email', formData.email);
@@ -173,26 +170,21 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
 
       if (response.ok) {
         setSubmitStatus('success');
-        setSubmitMessage(result.message || t.alertSuccess); // Use server message or default
-        setFormData({ name: '', email: '', subject: '', message: '', attachment: null, recaptchaToken: null }); // Reset form
-        recaptchaRef.current?.reset();
-        if (isModal && onClose) {
-          // Optionally delay closing modal to show success message
-          setTimeout(() => {
-            onClose();
-          }, 2000);
+        setSubmitMessage(result.message || t.alertSuccess);
+        if (!isModal) { // For full page, reset form immediately
+            setFormData({ name: '', email: '', subject: '', message: '', attachment: null, recaptchaToken: null });
+            recaptchaRef.current?.reset();
         }
+        // For modal, success message will be shown, and user will close it via a button which then resets the form.
       } else {
         setSubmitStatus('error');
         setSubmitMessage(result.error || t.alertError || 'An unexpected error occurred.');
-        // Reset reCAPTCHA on error
         recaptchaRef.current?.reset();
       }
     } catch (error) {
       console.error('Submission error:', error);
       setSubmitStatus('error');
       setSubmitMessage(t.alertError || 'Failed to send message. Please try again.');
-      // Reset reCAPTCHA on error
       recaptchaRef.current?.reset();
     } finally {
       setIsSubmitting(false);
@@ -221,13 +213,12 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
     }
   };
 
-  // Render just the form if used in modal mode
   if (isModal) {
     return (
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{modalTitle || t.modalDefaultTitle}</h3> {/* Use translation */}
-          {onClose && (
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{modalTitle || t.modalDefaultTitle}</h3>
+          {onClose && ! (submitStatus === 'success') && ( 
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -237,144 +228,174 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
           )}
         </div>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelName}</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <input 
-                type="text" 
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                placeholder={t.placeholderName}
-                maxLength={MAX_NAME_LENGTH}
-                required
-              />
-              <span className="text-xs text-gray-500 dark:text-gray-400">{formData.name.length}/{MAX_NAME_LENGTH}</span>
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelEmail}</label> {/* Use translation */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-gray-400" />
-              </div>
-              <input 
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                placeholder={t.placeholderEmail} // Use translation
-                required
-              />
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelSubject}</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MessageSquare className="h-5 w-5 text-gray-400" />
-              </div>
-              <input 
-                type="text"
-                name="subject"
-                value={formData.subject}
-                onChange={handleInputChange}
-                className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                placeholder={t.placeholderSubject}
-                maxLength={MAX_SUBJECT_LENGTH}
-                required
-              />
-              <span className="text-xs text-gray-500 dark:text-gray-400">{formData.subject.length}/{MAX_SUBJECT_LENGTH}</span>
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelMessage}</label>
-            <textarea
-              rows={5}
-              name="message"
-              value={formData.message}
-              onChange={handleInputChange}
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-              placeholder={t.placeholderMessage}
-              maxLength={MAX_MESSAGE_LENGTH}
-              required
-            ></textarea>
-            <span className="text-xs text-gray-500 dark:text-gray-400">{formData.message.length}/{MAX_MESSAGE_LENGTH}</span>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attachment (optional, max 5MB)</label>
-            <div className="relative">
-              <input
-                type="file"
-                onChange={handleFileChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-              />
-              {fileError && (
-                <p className="text-sm text-red-500 mt-1">{fileError}</p>
-              )}
-              {formData.attachment && (
-                <p className="text-sm text-green-500 mt-1">
-                  File selected: {formData.attachment.name} ({(formData.attachment.size / (1024 * 1024)).toFixed(2)}MB)
-                </p>
-              )}
-            </div>
-          </div>
-          
-          <div className="mt-4">
-            <ReCAPTCHA
-              ref={recaptchaRef}
-              sitekey="6LdnxjorAAAAAE8GP_mvWHXUXeNRTRTO7Zvega3b"
-              onChange={handleRecaptchaChange}
-              onErrored={() => setRecaptchaError(t.recaptchaError || 'Failed to load reCAPTCHA. Please try again.')}
-            />
-          </div>
-          {recaptchaError && (
-            <p className="text-sm text-red-500 mt-1">{recaptchaError}</p>
-          )}
-          
-          <motion.div
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-          >
-            <button 
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-3 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        {submitStatus !== 'success' && (
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t.labelName}</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  {t.buttonSending || 'Sending...'}
-                </>
-              ) : (
-                <>
-                  <span>{t.buttonSend}</span> {/* Use translation */}
-                  <Send className="h-5 w-5 ml-2" />
-                </>
-              )}
-            </button>
-          </motion.div>
-          {submitMessage && (
-            <div className={`mt-4 p-3 rounded-md text-sm ${submitStatus === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'}`}>
-              {submitMessage}
+                </div>
+                <input 
+                  type="text" 
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+                  placeholder={t.placeholderName}
+                  maxLength={MAX_NAME_LENGTH}
+                  required
+                />
+                <span className="absolute bottom-2.5 right-3 text-xs text-gray-400 dark:text-gray-500 pointer-events-none">{formData.name.length}/{MAX_NAME_LENGTH}</span>
+              </div>
             </div>
-          )}
-        </form>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t.labelEmail}</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input 
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+                  placeholder={t.placeholderEmail}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t.labelSubject}</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MessageSquare className="h-5 w-5 text-gray-400" />
+                </div>
+                <input 
+                  type="text"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+                  placeholder={t.placeholderSubject}
+                  maxLength={MAX_SUBJECT_LENGTH}
+                  required
+                />
+                <span className="absolute bottom-2.5 right-3 text-xs text-gray-400 dark:text-gray-500 pointer-events-none">{formData.subject.length}/{MAX_SUBJECT_LENGTH}</span>
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t.labelMessage}</label>
+              <div className="relative">
+                <textarea
+                  rows={4} 
+                  name="message"
+                  value={formData.message}
+                  onChange={handleInputChange}
+                  className="w-full px-4 pr-16 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+                  placeholder={t.placeholderMessage}
+                  maxLength={MAX_MESSAGE_LENGTH}
+                  required
+                ></textarea>
+                <span className="absolute bottom-2.5 right-3 text-xs text-gray-400 dark:text-gray-500 pointer-events-none">{formData.message.length}/{MAX_MESSAGE_LENGTH}</span>
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachment (optional, max 5MB)</label>
+              <div className="relative">
+                <label htmlFor="modalAttachment" className="w-full flex items-center justify-center px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer transition-colors duration-300 focus-within:ring-2 focus-within:ring-blue-500 dark:focus-within:ring-blue-400 focus-within:border-blue-500 dark:focus-within:border-blue-400">
+                  <UploadCloud className="h-5 w-5 mr-2 text-gray-500 dark:text-gray-400" />
+                  <span>{formData.attachment ? formData.attachment.name : 'Choose File'}</span>
+                </label>
+                <input
+                  id="modalAttachment"
+                  type="file"
+                  onChange={handleFileChange}
+                  className="sr-only"
+                />
+                {fileError && (
+                  <p className="text-sm text-red-500 mt-1">{fileError}</p>
+                )}
+                {formData.attachment && !fileError && (
+                  <p className="text-sm text-green-500 mt-1">
+                    Selected: {formData.attachment.name} ({(formData.attachment.size / (1024 * 1024)).toFixed(2)}MB)
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-3">
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey="6LdnxjorAAAAAE8GP_mvWHXUXeNRTRTO7Zvega3b"
+                onChange={handleRecaptchaChange}
+                onErrored={() => setRecaptchaError(t.recaptchaError || 'Failed to load reCAPTCHA. Please try again.')}
+              />
+            </div>
+            {recaptchaError && (
+              <p className="text-sm text-red-500 mt-1">{recaptchaError}</p>
+            )}
+            
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="pt-1"
+            >
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-2.5 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {t.buttonSending || 'Sending...'}
+                  </>
+                ) : (
+                  <>
+                    <span>{t.buttonSend}</span>
+                    <Send className="h-5 w-5 ml-2" />
+                  </>
+                )}
+              </button>
+            </motion.div>
+          </form>
+        )}
+
+        {submitStatus === 'success' && isModal && submitMessage && (
+          <div className="mt-4 p-4 rounded-md bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+            <div className="flex justify-between items-center">
+              <p>{submitMessage}</p>
+              <button
+                onClick={() => {
+                  setFormData({ name: '', email: '', subject: '', message: '', attachment: null, recaptchaToken: null });
+                  recaptchaRef.current?.reset();
+                  setSubmitStatus(null);
+                  setSubmitMessage('');
+                  onClose?.();
+                }}
+                className="text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100 p-1 rounded-full -mr-1"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        )}
+        {submitStatus === 'error' && submitMessage && (
+          <div className={`mt-4 p-3 rounded-md text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300`}>
+            {submitMessage}
+          </div>
+        )}
       </div>
     );
   }
@@ -383,7 +404,6 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
   return (
     <section className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
       <div className="container mx-auto px-4 relative">
-        {/* Decorative elements */}
         <div className="absolute top-40 left-10 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 right-10 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
         
@@ -401,12 +421,12 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
             transition={{ duration: 0.6, delay: 0.2 }}
             className="inline-block"
           >
-            <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-sm uppercase font-bold tracking-wider py-1 px-3 rounded-full mb-3 inline-block">{t.pageBadge}</span> {/* Use translation */}
+            <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-sm uppercase font-bold tracking-wider py-1 px-3 rounded-full mb-3 inline-block">{t.pageBadge}</span>
           </motion.div>
           <h2 className="text-4xl md:text-5xl font-bold mb-6 dark:text-white relative">
             <span className="relative">
-              {t.pageHeading1} {/* Use translation */}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400 ml-3">{t.pageHeading2}</span> {/* Use translation */}
+              {t.pageHeading1}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400 ml-3">{t.pageHeading2}</span>
               <motion.div 
                 className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-blue-600/50 to-blue-400/50 rounded-full"
                 initial={{ width: "0%" }}
@@ -423,7 +443,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            {t.pageSubtitle} {/* Use translation */}
+            {t.pageSubtitle}
           </motion.p>
         </motion.div>
         
@@ -440,7 +460,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 className="text-2xl font-bold mb-8 dark:text-white"
                 variants={itemVariants}
               >
-                {t.infoTitle} {/* Use translation */}
+                {t.infoTitle}
               </motion.h3>
 
               <motion.div className="space-y-6" variants={itemVariants}>
@@ -453,7 +473,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                     <Phone className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">{t.infoLabelPhone}</h4> {/* Use translation */}
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{t.infoLabelPhone}</h4>
                     <a href="tel:+99412311418" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                       +994 12 311 14 18
                     </a>
@@ -469,7 +489,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                     <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">{t.infoLabelEmail}</h4> {/* Use translation */}
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{t.infoLabelEmail}</h4>
                     <a href="mailto:Sales@azportsupply.com" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                       Sales@azportsupply.com
                     </a>
@@ -485,7 +505,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                     <MapPin className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">{t.infoLabelLocation}</h4> {/* Use translation */}
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{t.infoLabelLocation}</h4>
                     <p className="text-gray-600 dark:text-gray-300">
                       Chinar Park Business Center, Baku
                     </p>
@@ -501,16 +521,16 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                     <Clock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">{t.infoLabelHours}</h4> {/* Use translation */}
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{t.infoLabelHours}</h4>
                     <p className="text-gray-600 dark:text-gray-300">
-                      {t.infoHoursLine1}<br /> {/* Use translation */}
-                      {t.infoHoursLine2} {/* Use translation */}
+                      {t.infoHoursLine1}<br />
+                      {t.infoHoursLine2}
                     </p>
                   </div>
                 </motion.div>
 
                 <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4">{t.infoLabelFollow}</h4> {/* Use translation */}
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4">{t.infoLabelFollow}</h4>
                   <div className="flex space-x-4">
                     <a
                       href="https://www.facebook.com/profile.php?id=61575970508290"
@@ -551,12 +571,12 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 className="text-2xl font-bold mb-8 dark:text-white"
                 variants={itemVariants}
               >
-                {t.formTitle} {/* Use translation */}
+                {t.formTitle}
               </motion.h3>
 
-              <motion.form className="space-y-6" variants={itemVariants} onSubmit={handleSubmit}>
+              <motion.form className="space-y-3" variants={itemVariants} onSubmit={handleSubmit}>
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelName}</label> {/* Use translation */}
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t.labelName}</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -568,17 +588,17 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                      placeholder={t.placeholderName} // Use translation
+                      className="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+                      placeholder={t.placeholderName}
                       maxLength={MAX_NAME_LENGTH}
                       required
                     />
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{formData.name.length}/{MAX_NAME_LENGTH}</span>
+                    <span className="absolute bottom-2.5 right-3 text-xs text-gray-400 dark:text-gray-500 pointer-events-none">{formData.name.length}/{MAX_NAME_LENGTH}</span>
                   </div>
                 </motion.div>
                 
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelEmail}</label> {/* Use translation */}
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t.labelEmail}</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Mail className="h-5 w-5 text-gray-400" />
@@ -588,15 +608,15 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                      placeholder={t.placeholderEmail} // Use translation
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+                      placeholder={t.placeholderEmail}
                       required
                     />
                   </div>
                 </motion.div>
                 
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelSubject}</label> {/* Use translation */}
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t.labelSubject}</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <MessageSquare className="h-5 w-5 text-gray-400" />
@@ -606,50 +626,57 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                       name="subject"
                       value={formData.subject}
                       onChange={handleInputChange}
-                      className="w-full pl-10 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                      placeholder={t.placeholderSubject} // Use translation
+                      className="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+                      placeholder={t.placeholderSubject}
                       maxLength={MAX_SUBJECT_LENGTH}
                       required
                     />
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{formData.subject.length}/{MAX_SUBJECT_LENGTH}</span>
+                    <span className="absolute bottom-2.5 right-3 text-xs text-gray-400 dark:text-gray-500 pointer-events-none">{formData.subject.length}/{MAX_SUBJECT_LENGTH}</span>
                   </div>
                 </motion.div>
                 
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.labelMessage}</label> {/* Use translation */}
-                  <textarea
-                    rows={5}
-                    name="message"
-                    value={formData.message}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
-                    placeholder={t.placeholderMessage} // Use translation
-                    maxLength={MAX_MESSAGE_LENGTH}
-                    required
-                  ></textarea>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">{formData.message.length}/{MAX_MESSAGE_LENGTH}</span>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t.labelMessage}</label>
+                  <div className="relative">
+                    <textarea
+                      rows={5}
+                      name="message"
+                      value={formData.message}
+                      onChange={handleInputChange}
+                      className="w-full px-4 pr-16 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+                      placeholder={t.placeholderMessage}
+                      maxLength={MAX_MESSAGE_LENGTH}
+                      required
+                    ></textarea>
+                    <span className="absolute bottom-2.5 right-3 text-xs text-gray-400 dark:text-gray-500 pointer-events-none">{formData.message.length}/{MAX_MESSAGE_LENGTH}</span>
+                  </div>
                 </motion.div>
                 
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attachment (optional, max 5MB)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachment (optional, max 5MB)</label>
                   <div className="relative">
+                    <label htmlFor="fullPageAttachment" className="w-full flex items-center justify-center px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer transition-colors duration-300 focus-within:ring-2 focus-within:ring-blue-500 dark:focus-within:ring-blue-400 focus-within:border-blue-500 dark:focus-within:border-blue-400">
+                      <UploadCloud className="h-5 w-5 mr-2 text-gray-500 dark:text-gray-400" />
+                      <span>{formData.attachment ? formData.attachment.name : 'Choose File'}</span>
+                    </label>
                     <input
+                      id="fullPageAttachment"
                       type="file"
                       onChange={handleFileChange}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors duration-300"
+                      className="sr-only"
                     />
                     {fileError && (
                       <p className="text-sm text-red-500 mt-1">{fileError}</p>
                     )}
-                    {formData.attachment && (
+                    {formData.attachment && !fileError && (
                       <p className="text-sm text-green-500 mt-1">
-                        File selected: {formData.attachment.name} ({(formData.attachment.size / (1024 * 1024)).toFixed(2)}MB)
+                        Selected: {formData.attachment.name} ({(formData.attachment.size / (1024 * 1024)).toFixed(2)}MB)
                       </p>
                     )}
                   </div>
                 </motion.div>
                 
-                <motion.div variants={itemVariants} className="mt-4">
+                <motion.div variants={itemVariants} className="mt-3">
                   <ReCAPTCHA
                     ref={recaptchaRef}
                     sitekey="6LdnxjorAAAAAE8GP_mvWHXUXeNRTRTO7Zvega3b"
@@ -662,7 +689,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                 )}
                 
                 <motion.div 
-                  className="pt-3"
+                  className="pt-1"
                   variants={itemVariants}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
@@ -670,7 +697,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                   <button 
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-4 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-3 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                      {isSubmitting ? (
                         <>
@@ -682,20 +709,28 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                         </>
                       ) : (
                         <>
-                          <span>{t.buttonSend}</span> {/* Use translation */}
-                          <Send className="h-5 w-5" />
+                          <span>{t.buttonSend}</span>
+                          <Send className="h-5 w-5 ml-2" />
                         </>
                       )}
                   </button>
                 </motion.div>
-                 {submitMessage && (
-                  <motion.div
-                    variants={itemVariants}
-                    className={`mt-4 p-3 rounded-md text-sm ${submitStatus === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'}`}
-                  >
-                    {submitMessage}
-                  </motion.div>
-                )}
+                 {submitStatus === 'success' && !isModal && submitMessage && (
+                    <motion.div
+                        variants={itemVariants}
+                        className={`mt-4 p-3 rounded-md text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300`}
+                    >
+                        {submitMessage}
+                    </motion.div>
+                 )}
+                 {submitStatus === 'error' && submitMessage && (
+                    <motion.div
+                        variants={itemVariants}
+                        className={`mt-4 p-3 rounded-md text-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300`}
+                    >
+                        {submitMessage}
+                    </motion.div>
+                 )}
               </motion.form>
             </div>
           </motion.div>
@@ -721,8 +756,8 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
             </div>
             <div className="absolute inset-0 bg-blue-900/10 flex flex-col items-center justify-center p-4">
               <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-6 rounded-xl shadow-2xl transform hover:-translate-y-1 transition-transform duration-300 max-w-md w-full">
-                <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{t.mapOverlayTitle}</h3> {/* Use translation */}
-                <p className="text-gray-700 dark:text-gray-300 mb-4">{t.mapOverlayText}</p> {/* Use translation */}
+                <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{t.mapOverlayTitle}</h3>
+                <p className="text-gray-700 dark:text-gray-300 mb-4">{t.mapOverlayText}</p>
                 <div className="flex items-center">
                   <Map className="h-5 w-5 text-blue-600 mr-2" />
                   <a
@@ -731,7 +766,7 @@ export function Contact({ isModal, modalTitle, initialValues, onClose }: Contact
                     rel="noopener noreferrer"
                     className="text-blue-600 font-medium hover:underline"
                   >
-                    {t.mapLink} {/* Use translation */}
+                    {t.mapLink}
                   </a>
                 </div>
               </div>
