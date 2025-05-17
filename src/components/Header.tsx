@@ -113,8 +113,8 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
           
           <div className="flex items-center space-x-6">
             <div className="hidden md:block">
-              <motion.ul 
-                className="flex items-center space-x-2"
+              <motion.ul
+                className="flex items-center md:space-x-1 lg:space-x-0.5 xl:space-x-1 2xl:space-x-2"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -129,7 +129,7 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
                   <motion.li key={item.href} whileHover={{ scale: 1.05 }}>
                     <Link
                       href={item.href}
-                      className={`px-5 py-2.5 rounded-lg text-base font-medium transition-all duration-300 ${
+                      className={`md:px-2 lg:px-2 xl:px-2 2xl:px-5 py-2.5 rounded-lg text-base font-medium transition-all duration-300 ${
                         router.pathname === item.href
                           ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                           : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -187,7 +187,7 @@ export function Header({ darkMode, setDarkMode, isMenuOpen, setIsMenuOpen }: Hea
                 <motion.li whileHover={{ scale: 1.05 }}>
                   <Link
                     href="/contact"
-                    className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-base font-medium hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-blue-600/20"
+                    className="bg-blue-600 text-white md:px-2 lg:px-2 xl:px-2 2xl:px-5 py-2.5 rounded-lg text-base font-medium hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-blue-600/20"
                   >
                     {t.contactUs} {/* Use translation */}
                   </Link>

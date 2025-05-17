@@ -1,8 +1,13 @@
 {
   "/_app": "pages/_app.js",
-  "/_document": "pages/_document.js",
   "/_error": "pages/_error.js",
-  "/distribution": "pages/distribution.js",
-  "/about": "pages/about.js",
-  "/contact": "pages/contact.js"
+  "/_document": "pages/_document.js",
+  "/": "pages/index.js",
+  "/products": "pages/products.js",
+  "/api/products": "pages/api/products.js",
+  "/api/auth/verify": "pages/api/auth/verify.js",
+  "/test345": "pages/test345.js",
+  "/api/auth": "pages/api/auth.js",
+  "/api/categories": "pages/api/categories.js",
+  "/api/job-openings": "pages/api/job-openings.js"
 }
